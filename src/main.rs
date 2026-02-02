@@ -1,6 +1,8 @@
-use std::io::Read;
+mod http_request;
+
 use std::net::{TcpListener, TcpStream};
 use std::thread;
+use crate::http_request::HttpRequest;
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
@@ -19,26 +21,7 @@ fn main() {
     }
 }
 
-fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
-    let mut temp = [0u8; 1024];
-    let mut buffer = Vec::new();
-
-    loop {
-        let n = stream.read(&mut temp)?;
-
-        if n == 0 {
-            println!("Client disconnected");
-            break;
-        }
-
-        buffer.extend_from_slice(&temp[..n]);
-
-        print!(
-            "Received {} bytes: {}",
-            buffer.len(),
-            String::from_utf8_lossy(&buffer)
-        );
-    }
-
+fn handle_connection(stream: TcpStream) -> std::io::Result<()> {
+    let r = HttpRequest::new(&stream);
     Ok(())
 }
