@@ -5,6 +5,7 @@ const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
 
 #[warn(dead_code)]
+#[derive(Debug)]
 pub struct HttpRequest {
     method: String,
     path: String,
