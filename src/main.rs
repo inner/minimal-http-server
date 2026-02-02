@@ -23,7 +23,7 @@ fn main() {
 }
 
 fn handle_connection(stream: TcpStream) -> std::io::Result<()> {
-    let r = HttpRequest::new(&stream)?;
+    let r = HttpRequest::new(stream)?;
     println!("{:?}", r);
     Ok(())
 }
