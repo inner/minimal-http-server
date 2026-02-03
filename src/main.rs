@@ -30,11 +30,10 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
     let status_line = if request.path == "/" {
         "HTTP/1.1 200 OK\r\n\r\n"
     } else {
-        "HTTP1/1 404 Not Found\r\n\r\n"
+        "HTTP/1.1 404 Not Found\r\n\r\n"
     };
 
     stream.write_all(status_line.as_bytes())?;
-    // stream.write_all(b"\r\n")?;
 
     Ok(())
 }
