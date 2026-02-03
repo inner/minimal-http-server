@@ -8,15 +8,15 @@ const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
 #[warn(dead_code)]
 #[derive(Debug)]
 pub struct HttpRequest {
-    method: String,
-    path: String,
-    version: String,
-    headers: HashMap<String, String>,
-    body: Vec<u8>,
+    pub method: String,
+    pub path: String,
+    pub version: String,
+    pub headers: HashMap<String, String>,
+    pub body: Vec<u8>,
 }
 
 impl HttpRequest {
-    pub fn new(stream: TcpStream) -> std::io::Result<HttpRequest> {
+    pub fn new(stream: &TcpStream) -> std::io::Result<HttpRequest> {
         let mut reader = BufReader::new(stream);
 
         let mut http_line = String::new();
