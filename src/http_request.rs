@@ -5,14 +5,13 @@ use std::net::TcpStream;
 const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
 
-#[warn(dead_code)]
-#[derive(Debug)]
+#[warn(unused)]
 pub struct HttpRequest {
-    pub method: String,
+    method: String,
     pub path: String,
-    pub version: String,
-    pub headers: HashMap<String, String>,
-    pub body: Vec<u8>,
+    version: String,
+    headers: HashMap<String, String>,
+    body: Vec<u8>,
 }
 
 impl HttpRequest {
@@ -22,7 +21,7 @@ impl HttpRequest {
         let mut http_line = String::new();
         reader.read_line(&mut http_line)?;
 
-        let parts: Vec<&str> = http_line.trim().split_whitespace().collect();
+        let parts: Vec<&str> = http_line.split_whitespace().collect();
         if parts.len() != 3 {
             return Err(std::io::Error::new(
                 std::io::ErrorKind::InvalidData,

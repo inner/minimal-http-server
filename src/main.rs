@@ -25,7 +25,6 @@ fn main() {
 
 fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
     let request = HttpRequest::new(&stream)?;
-    println!("{:?}", request);
 
     let status_line = if request.path == "/" {
         "HTTP/1.1 200 OK\r\n\r\n"
