@@ -34,7 +34,7 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
     };
 
     stream.write_all(status_line.as_bytes())?;
-    stream.write_all(b"\r\n")?;
+    // stream.write_all(b"\r\n")?;
 
     Ok(())
 }
