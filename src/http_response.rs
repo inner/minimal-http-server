@@ -9,7 +9,7 @@ pub struct HttpResponse {
 impl HttpResponse {
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut response = Vec::new();
-        response.extend_from_slice(format!("{}\r\n", self.http_line).as_bytes());
+        response.extend_from_slice(format!("{}\r\n", &self.http_line).as_bytes());
 
         for (k, v) in &self.headers {
             response.extend_from_slice(format!("{k}: {v}\r\n").as_bytes());
