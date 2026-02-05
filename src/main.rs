@@ -34,7 +34,7 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
 
     let status_line = if request.path == "/" {
         let response = HttpResponse {
-            http_line: String::from(STATUS_LINE_200),
+            http_status_line: String::from(STATUS_LINE_200),
             body: String::new(),
             headers: HashMap::new(),
         };
@@ -50,14 +50,14 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
         headers.insert(String::from("Content-Type"), String::from("text/plain"));
 
         let response = HttpResponse {
-            http_line: String::from(STATUS_LINE_200),
+            http_status_line: String::from(STATUS_LINE_200),
             headers,
             body: String::from(echo),
         };
         response.as_bytes()
     } else {
         let response = HttpResponse {
-            http_line: String::from(STATUS_LINE_404),
+            http_status_line: String::from(STATUS_LINE_404),
             body: String::new(),
             headers: HashMap::new(),
         };
