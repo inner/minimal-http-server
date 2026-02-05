@@ -9,6 +9,9 @@ use std::thread;
 
 use self::http_response::HttpResponse;
 
+const STATUS_LINE_200: &str = "HTTP/1.1 200 OK";
+const STATUS_LINE_404: &str = "HTTP/1.1 404 Not Found";
+
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
 
@@ -31,7 +34,7 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
 
     let status_line = if request.path == "/" {
         let response = HttpResponse {
-            http_line: String::from("HTTP/1.1 200 OK"),
+            http_line: String::from(STATUS_LINE_200),
             body: String::new(),
             headers: HashMap::new(),
         };
@@ -47,14 +50,14 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
         headers.insert(String::from("Content-Type"), String::from("text/plain"));
 
         let response = HttpResponse {
-            http_line: String::from("HTTP/1.1 200 OK"),
+            http_line: String::from(STATUS_LINE_200),
             headers,
             body: String::from(echo),
         };
         response.as_bytes()
     } else {
         let response = HttpResponse {
-            http_line: String::from("HTTP/1.1 404 Not Found"),
+            http_line: String::from(STATUS_LINE_404),
             body: String::new(),
             headers: HashMap::new(),
         };
