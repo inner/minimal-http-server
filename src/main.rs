@@ -41,7 +41,6 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
         response.as_bytes()
     } else if let Some(echo) = request.path.strip_prefix("/echo/") {
         let mut headers = HashMap::new();
-
         headers.insert(String::from("Content-Length"), echo.len().to_string());
         headers.insert(String::from("Content-Type"), String::from("text/plain"));
 
@@ -51,6 +50,25 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
             body: String::from(echo),
         };
         response.as_bytes()
+    } else if let Some(_) = request.path.strip_prefix("/user-agent") {
+        if let Some(user_agent) = request.headers.get("User-Agent") {
+            let mut headers = HashMap::new();
+            headers.insert("Content-Length".to_string(), user_agent.len().to_string());
+
+            let response = HttpResponse {
+                http_status_line: String::from(STATUS_LINE_200),
+                headers,
+                body: String::from(user_agent),
+            };
+            response.as_bytes()
+        } else {
+            let response = HttpResponse {
+                http_status_line: String::from(STATUS_LINE_404),
+                headers: HashMap::new(),
+                body: String::new(),
+            };
+            response.as_bytes()
+        }
     } else {
         let response = HttpResponse {
             http_status_line: String::from(STATUS_LINE_404),
