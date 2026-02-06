@@ -1,6 +1,7 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
+#[derive(Debug)]
 pub struct HttpResponse<'a> {
     pub http_status_line: &'a str,
     pub body: &'a str,
