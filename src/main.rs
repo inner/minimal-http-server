@@ -34,9 +34,9 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
 
     let status_line = if request.path == "/" {
         let response = HttpResponse {
-            http_status_line: String::from(STATUS_LINE_200),
-            body: String::new(),
+            http_status_line: STATUS_LINE_200,
             headers: HashMap::new(),
+            body: "",
         };
         response.as_bytes()
     } else if let Some(echo) = request.path.strip_prefix("/echo/") {
@@ -45,9 +45,9 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
         headers.insert(String::from("Content-Type"), String::from("text/plain"));
 
         let response = HttpResponse {
-            http_status_line: String::from(STATUS_LINE_200),
+            http_status_line: STATUS_LINE_200,
             headers,
-            body: String::from(echo),
+            body: echo,
         };
         response.as_bytes()
     } else if request.path.starts_with("/user-agent") {
@@ -57,24 +57,24 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
             headers.insert(String::from("Content-Type"), String::from("text/plain"));
 
             let response = HttpResponse {
-                http_status_line: String::from(STATUS_LINE_200),
+                http_status_line: STATUS_LINE_200,
                 headers,
-                body: String::from(user_agent),
+                body: user_agent,
             };
             response.as_bytes()
         } else {
             let response = HttpResponse {
-                http_status_line: String::from(STATUS_LINE_404),
+                http_status_line: STATUS_LINE_404,
                 headers: HashMap::new(),
-                body: String::new(),
+                body: "",
             };
             response.as_bytes()
         }
     } else {
         let response = HttpResponse {
-            http_status_line: String::from(STATUS_LINE_404),
-            body: String::new(),
+            http_status_line: STATUS_LINE_404,
             headers: HashMap::new(),
+            body: "",
         };
         response.as_bytes()
     };

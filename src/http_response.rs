@@ -1,15 +1,15 @@
 use std::collections::HashMap;
 
-pub struct HttpResponse {
-    pub http_status_line: String,
-    pub body: String,
+pub struct HttpResponse<'a> {
+    pub http_status_line: &'a str,
+    pub body: &'a str,
     pub headers: HashMap<String, String>,
 }
 
-impl HttpResponse {
+impl<'a> HttpResponse<'a> {
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut response = Vec::new();
-        response.extend_from_slice(format!("{}\r\n", &self.http_status_line).as_bytes());
+        response.extend_from_slice("{self.http_status_line}\r\n".as_bytes());
 
         for (k, v) in &self.headers {
             response.extend_from_slice(format!("{k}: {v}\r\n").as_bytes());
