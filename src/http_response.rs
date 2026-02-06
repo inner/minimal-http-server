@@ -3,7 +3,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct HttpResponse<'a> {
-    pub http_status_line: &'a str,
+    pub http_status_line: &'static str,
     pub body: &'a str,
     pub headers: HashMap<&'static str, Cow<'static, str>>,
 }
