@@ -1,5 +1,5 @@
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Read};
+use std::io::{BufRead, BufReader, Error, ErrorKind, Read};
 use std::net::TcpStream;
 
 const MAX_HEADER_SIZE: usize = 8 * 1024;
@@ -22,33 +22,30 @@ impl HttpRequest {
         let mut http_line = String::new();
         reader.read_line(&mut http_line)?;
 
-        let parts: Vec<&str> = http_line.split_whitespace().collect();
-        if parts.len() != 3 {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidData,
-                "invalid request line",
-            ));
-        }
+        let mut parts = http_line.split_whitespace();
 
-        let (method, path, version) = (
-            parts[0].to_string(),
-            parts[1].to_string(),
-            parts[2].to_string(),
-        );
+        let method = parts
+            .next()
+            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing method"))?;
+
+        let path = parts
+            .next()
+            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing path"))?;
+
+        let version = parts
+            .next()
+            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing version"))?;
 
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut total_header_size = 0;
-
+        let mut header_line = String::new();
         loop {
-            let mut header_line = String::new();
+            header_line.clear();
             reader.read_line(&mut header_line)?;
 
             total_header_size += header_line.len();
             if total_header_size > MAX_HEADER_SIZE {
-                return Err(std::io::Error::new(
-                    std::io::ErrorKind::InvalidInput,
-                    "headers too large",
-                ));
+                return Err(Error::new(ErrorKind::InvalidInput, "headers too large"));
             }
 
             if header_line == "\r\n" || header_line == "\n" {
@@ -68,10 +65,7 @@ impl HttpRequest {
             .unwrap_or(0);
 
         if content_length > MAX_BODY_SIZE {
-            return Err(std::io::Error::new(
-                std::io::ErrorKind::InvalidInput,
-                "body too large",
-            ));
+            return Err(Error::new(ErrorKind::InvalidInput, "body too large"));
         }
 
         let mut body = Vec::new();
@@ -81,9 +75,9 @@ impl HttpRequest {
         }
 
         Ok(Self {
-            method,
-            path,
-            version,
+            method: method.to_string(),
+            path: path.to_string(),
+            version: version.to_string(),
             headers,
             body,
         })
