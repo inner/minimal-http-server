@@ -16,7 +16,7 @@ impl<'a> HttpResponse<'a> {
 
         for (k, v) in &self.headers {
             response.extend_from_slice(k.as_bytes());
-            response.extend_from_slice(":".as_bytes());
+            response.extend_from_slice(": ".as_bytes());
             response.extend_from_slice(v.as_bytes());
             response.extend_from_slice("\r\n".as_bytes());
         }
