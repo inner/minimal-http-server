@@ -54,6 +54,7 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
         if let Some(user_agent) = request.headers.get("user-agent") {
             let mut headers = HashMap::new();
             headers.insert("Content-Length".to_string(), user_agent.len().to_string());
+            headers.insert(String::from("Content-Type"), String::from("text/plain"));
 
             let response = HttpResponse {
                 http_status_line: String::from(STATUS_LINE_200),
