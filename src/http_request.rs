@@ -30,7 +30,12 @@ impl HttpRequest {
             ));
         }
 
-        let (method, path, version) = (parts[0], parts[1], parts[2]);
+        let (method, path, version) = (
+            parts[0].to_string(),
+            parts[1].to_string(),
+            parts[2].to_string(),
+        );
+        
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut total_header_size = 0;
 
