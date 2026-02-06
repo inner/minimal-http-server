@@ -39,6 +39,7 @@ impl HttpRequest {
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut total_header_size = 0;
         let mut header_line = String::new();
+
         loop {
             header_line.clear();
             reader.read_line(&mut header_line)?;
