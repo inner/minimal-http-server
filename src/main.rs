@@ -50,8 +50,8 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
             body: String::from(echo),
         };
         response.as_bytes()
-    } else if let Some(_) = request.path.strip_prefix("/user-agent") {
-        if let Some(user_agent) = request.headers.get("User-Agent") {
+    } else if request.path.starts_with("/user-agent") {
+        if let Some(user_agent) = request.headers.get("user-agent") {
             let mut headers = HashMap::new();
             headers.insert("Content-Length".to_string(), user_agent.len().to_string());
 

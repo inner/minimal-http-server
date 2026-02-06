@@ -5,6 +5,7 @@ use std::net::TcpStream;
 const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
 
+#[derive(Debug)]
 #[allow(dead_code)]
 pub struct HttpRequest {
     pub method: String,
