@@ -1,9 +1,10 @@
+use std::borrow::Cow;
 use std::collections::HashMap;
 
 pub struct HttpResponse<'a> {
     pub http_status_line: &'a str,
     pub body: &'a str,
-    pub headers: HashMap<String, String>,
+    pub headers: HashMap<&'static str, Cow<'static, str>>,
 }
 
 impl<'a> HttpResponse<'a> {
@@ -13,7 +14,10 @@ impl<'a> HttpResponse<'a> {
         response.extend_from_slice("\r\n".as_bytes());
 
         for (k, v) in &self.headers {
-            response.extend_from_slice(format!("{k}: {v}\r\n").as_bytes());
+            response.extend_from_slice(k.as_bytes());
+            response.extend_from_slice(":".as_bytes());
+            response.extend_from_slice(v.as_bytes());
+            response.extend_from_slice("\r\n".as_bytes());
         }
 
         response.extend_from_slice("\r\n".as_bytes());

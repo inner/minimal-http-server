@@ -2,6 +2,7 @@ mod http_request;
 mod http_response;
 
 use crate::http_request::HttpRequest;
+use std::borrow::Cow;
 use std::collections::HashMap;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
@@ -11,6 +12,10 @@ use self::http_response::HttpResponse;
 
 const STATUS_LINE_200: &str = "HTTP/1.1 200 OK";
 const STATUS_LINE_404: &str = "HTTP/1.1 404 Not Found";
+
+const CONTENT_LENGTH: &str = "Content-Length";
+const CONTENT_TYPE: &str = "Content-Type";
+const TEXT_PLAIN: &str = "text/plain";
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
@@ -41,8 +46,8 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
         response.as_bytes()
     } else if let Some(echo) = request.path.strip_prefix("/echo/") {
         let mut headers = HashMap::new();
-        headers.insert(String::from("Content-Length"), echo.len().to_string());
-        headers.insert(String::from("Content-Type"), String::from("text/plain"));
+        headers.insert(CONTENT_LENGTH, Cow::Owned(echo.len().to_string()));
+        headers.insert(CONTENT_TYPE, Cow::Borrowed(TEXT_PLAIN));
 
         let response = HttpResponse {
             http_status_line: STATUS_LINE_200,
@@ -53,8 +58,8 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
     } else if request.path.starts_with("/user-agent") {
         if let Some(user_agent) = request.headers.get("user-agent") {
             let mut headers = HashMap::new();
-            headers.insert("Content-Length".to_string(), user_agent.len().to_string());
-            headers.insert(String::from("Content-Type"), String::from("text/plain"));
+            headers.insert(CONTENT_LENGTH, Cow::Owned(user_agent.len().to_string()));
+            headers.insert(CONTENT_TYPE, Cow::Borrowed(TEXT_PLAIN));
 
             let response = HttpResponse {
                 http_status_line: STATUS_LINE_200,

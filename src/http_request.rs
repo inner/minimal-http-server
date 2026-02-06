@@ -35,7 +35,7 @@ impl HttpRequest {
             parts[1].to_string(),
             parts[2].to_string(),
         );
-        
+
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut total_header_size = 0;
 
