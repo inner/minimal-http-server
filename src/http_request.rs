@@ -5,13 +5,13 @@ use std::net::TcpStream;
 const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
 
-#[warn(unused)]
+#[allow(dead_code)]
 pub struct HttpRequest {
-    method: String,
+    pub method: String,
     pub path: String,
-    version: String,
-    headers: HashMap<String, String>,
-    body: Vec<u8>,
+    pub version: String,
+    pub headers: HashMap<String, String>,
+    pub body: Vec<u8>,
 }
 
 impl HttpRequest {
