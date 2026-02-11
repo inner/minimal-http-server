@@ -101,16 +101,9 @@ fn handle_connection(
             response.as_bytes()
         }
     } else if let Some(file_name) = request.path.strip_prefix("/files/") {
-        let dir_param = args.get("directory");
-        if let None = dir_param {
-            let response = HttpResponse {
-                http_status_line: http::status::NOT_FOUND,
-                headers: HashMap::new(),
-                body: "",
-            };
-            response.as_bytes()
-        } else {
-            let mut f = File::open(dir_param.unwrap().to_string() + file_name)?;
+        let dir = args.get("directory");
+        if let Some(d) = dir {
+            let mut f = File::open(d.to_string() + file_name)?;
             let mut contents = String::new();
             let bytes = f.read_to_string(&mut contents)?;
 
@@ -125,6 +118,13 @@ fn handle_connection(
                 http_status_line: http::status::OK,
                 headers,
                 body: &contents,
+            };
+            response.as_bytes()
+        } else {
+            let response = HttpResponse {
+                http_status_line: http::status::NOT_FOUND,
+                headers: HashMap::new(),
+                body: "",
             };
             response.as_bytes()
         }
