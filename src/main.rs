@@ -14,12 +14,9 @@ use std::{env, thread};
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
+    env::args().next();
     let mut args: HashMap<String, String> = HashMap::new();
-    for arg in env::args() {
-        if let Some(v) = env::args().next() {
-            args.insert(arg, v);
-        }
-    }
+    args.insert(env::args().next().unwrap(), env::args().next().unwrap());
     println!("{:?}", args);
 
     for stream in listener.incoming() {
