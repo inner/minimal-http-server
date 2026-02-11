@@ -2,7 +2,6 @@ mod http;
 mod http_request;
 mod http_response;
 
-use self::http::headers;
 use self::http_request::HttpRequest;
 use self::http_response::HttpResponse;
 
@@ -95,12 +94,7 @@ fn handle_connection(
             };
             response.as_bytes()
         } else {
-            let response = HttpResponse {
-                http_status_line: http::status::NOT_FOUND,
-                headers: HashMap::new(),
-                body: "",
-            };
-            response.as_bytes()
+            HttpResponse::not_found().as_bytes()
         }
     } else if request.method == "GET"
         && let Some(file_name) = request.path.strip_prefix("/files/")
@@ -124,20 +118,10 @@ fn handle_connection(
                 };
                 response.as_bytes()
             } else {
-                let response = HttpResponse {
-                    http_status_line: http::status::NOT_FOUND,
-                    headers: HashMap::new(),
-                    body: "",
-                };
-                response.as_bytes()
+                HttpResponse::not_found().as_bytes()
             }
         } else {
-            let response = HttpResponse {
-                http_status_line: http::status::NOT_FOUND,
-                headers: HashMap::new(),
-                body: "",
-            };
-            response.as_bytes()
+            HttpResponse::not_found().as_bytes()
         }
     } else if request.method == "POST"
         && let Some(file_name) = request.path.strip_prefix("/files/")
@@ -146,36 +130,15 @@ fn handle_connection(
             println!("test1");
             if let Ok(mut f) = File::create(d.to_string() + file_name) {
                 let _ = f.write(&request.body);
-
-                let response = HttpResponse {
-                    http_status_line: http::status::CREATED,
-                    headers: HashMap::new(),
-                    body: "",
-                };
-                response.as_bytes()
+                HttpResponse::created().as_bytes()
             } else {
-                let response = HttpResponse {
-                    http_status_line: http::status::NOT_FOUND,
-                    headers: HashMap::new(),
-                    body: "",
-                };
-                response.as_bytes()
+                HttpResponse::not_found().as_bytes()
             }
         } else {
-            let response = HttpResponse {
-                http_status_line: http::status::NOT_FOUND,
-                headers: HashMap::new(),
-                body: "",
-            };
-            response.as_bytes()
+            HttpResponse::not_found().as_bytes()
         }
     } else {
-        let response = HttpResponse {
-            http_status_line: http::status::NOT_FOUND,
-            headers: HashMap::new(),
-            body: "",
-        };
-        response.as_bytes()
+        HttpResponse::not_found().as_bytes()
     };
 
     stream.write_all(&status_line)?;

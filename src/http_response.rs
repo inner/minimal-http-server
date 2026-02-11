@@ -1,6 +1,8 @@
 use std::borrow::Cow;
 use std::collections::HashMap;
 
+use crate::http;
+
 #[derive(Debug)]
 pub struct HttpResponse<'a> {
     pub http_status_line: &'static str,
@@ -28,5 +30,21 @@ impl<'a> HttpResponse<'a> {
         }
 
         response
+    }
+
+    pub fn not_found() -> Self {
+        HttpResponse {
+            http_status_line: http::status::NOT_FOUND,
+            body: "",
+            headers: HashMap::new(),
+        }
+    }
+
+    pub fn created() -> Self {
+        HttpResponse {
+            http_status_line: http::status::CREATED,
+            body: "",
+            headers: HashMap::new(),
+        }
     }
 }
