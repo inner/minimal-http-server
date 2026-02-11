@@ -144,7 +144,7 @@ fn handle_connection(
     {
         if let Some(d) = args.get("directory") {
             println!("test1");
-            if let Ok(mut f) = File::create_new(d.to_string() + file_name) {
+            if let Ok(mut f) = File::create(d.to_string() + file_name) {
                 let _ = f.write(&request.body);
 
                 let response = HttpResponse {
