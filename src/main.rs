@@ -140,12 +140,11 @@ fn handle_connection(
             response.as_bytes()
         }
     } else if request.method == "POST"
-        && let Some(file_name) = request.path.strip_suffix("/files/")
+        && let Some(file_name) = request.path.strip_prefix("/files/")
     {
-        // let content_length = request.headers.get(http::headers::CONTENT_LENGTH).unwrap();
-
         if let Some(d) = args.get("directory") {
-            if let Ok(mut f) = File::open(d.to_string() + file_name) {
+            println!("test1");
+            if let Ok(mut f) = File::create_new(d.to_string() + file_name) {
                 let _ = f.write(&request.body);
 
                 let response = HttpResponse {
