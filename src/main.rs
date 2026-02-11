@@ -101,24 +101,33 @@ fn handle_connection(
             response.as_bytes()
         }
     } else if let Some(file_name) = request.path.strip_prefix("/files/") {
-        let dir = args.get("directory").unwrap();
-        let mut f = File::open(dir.to_string() + file_name)?;
-        let mut contents = String::new();
-        let bytes = f.read_to_string(&mut contents)?;
+        let dir_param = args.get("directory");
+        if let None = dir_param {
+            let response = HttpResponse {
+                http_status_line: http::status::NOT_FOUND,
+                headers: HashMap::new(),
+                body: "",
+            };
+            response.as_bytes()
+        } else {
+            let mut f = File::open(dir_param.unwrap().to_string() + file_name)?;
+            let mut contents = String::new();
+            let bytes = f.read_to_string(&mut contents)?;
 
-        let mut headers = HashMap::new();
-        headers.insert(http::headers::CONTENT_LENGTH, Cow::Owned(bytes.to_string()));
-        headers.insert(
-            http::headers::CONTENT_TYPE,
-            Cow::Borrowed(http::headers::OCTET_STREAM),
-        );
+            let mut headers = HashMap::new();
+            headers.insert(http::headers::CONTENT_LENGTH, Cow::Owned(bytes.to_string()));
+            headers.insert(
+                http::headers::CONTENT_TYPE,
+                Cow::Borrowed(http::headers::OCTET_STREAM),
+            );
 
-        let response = HttpResponse {
-            http_status_line: http::status::OK,
-            headers,
-            body: &contents,
-        };
-        response.as_bytes()
+            let response = HttpResponse {
+                http_status_line: http::status::OK,
+                headers,
+                body: &contents,
+            };
+            response.as_bytes()
+        }
     } else {
         let response = HttpResponse {
             http_status_line: http::status::NOT_FOUND,
