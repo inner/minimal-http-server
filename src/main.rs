@@ -33,7 +33,7 @@ fn main() {
             Ok(s) => {
                 let map = Arc::clone(&map);
                 thread::spawn(move || {
-                    handle_connection(Arc::clone(&map), s).unwrap();
+                    handle_connection(map, s).unwrap();
                 });
             }
             Err(e) => {
