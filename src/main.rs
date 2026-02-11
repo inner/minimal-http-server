@@ -14,10 +14,18 @@ use std::{env, thread};
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
-    env::args().next();
-    let mut args: HashMap<String, String> = HashMap::new();
-    args.insert(env::args().next().unwrap(), env::args().next().unwrap());
-    println!("{:?}", args);
+    let args: Vec<String> = env::args().skip(1).collect();
+    let map: HashMap<String, String> = args
+        .chunks(2)
+        .filter_map(|chunk| {
+            if chunk.len() == 2 && chunk[0].starts_with("--") {
+                Some((chunk[0][2..].to_string(), chunk[1].clone()))
+            } else {
+                None
+            }
+        })
+        .collect();
+    println!("{:?}", map);
 
     for stream in listener.incoming() {
         match stream {
