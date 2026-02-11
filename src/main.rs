@@ -101,8 +101,7 @@ fn handle_connection(
             response.as_bytes()
         }
     } else if let Some(file_name) = request.path.strip_prefix("/files/") {
-        let dir = args.get("directory");
-        if let Some(d) = dir {
+        if let Some(d) = args.get("directory") {
             let mut f = File::open(d.to_string() + file_name)?;
             let mut contents = String::new();
             let bytes = f.read_to_string(&mut contents)?;
