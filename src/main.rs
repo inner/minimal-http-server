@@ -83,7 +83,7 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
             response.as_bytes()
         }
     } else if let Some(file_name) = request.path.strip_prefix("/files/") {
-        let mut f = File::open(file_name)?;
+        let mut f = File::open("/tmp/".to_owned() + file_name)?;
         let mut contents = String::new();
         let bytes = f.read_to_string(&mut contents)?;
 
