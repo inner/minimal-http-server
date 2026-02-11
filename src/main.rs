@@ -7,31 +7,34 @@ use self::http_response::HttpResponse;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
+use std::error::Error;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
+use std::sync::Arc;
 use std::{env, thread};
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
     let args: Vec<String> = env::args().skip(1).collect();
-    let map: HashMap<String, String> = args
-        .chunks(2)
-        .filter_map(|chunk| {
-            if chunk.len() == 2 && chunk[0].starts_with("--") {
-                Some((chunk[0][2..].to_string(), chunk[1].clone()))
-            } else {
-                None
-            }
-        })
-        .collect();
-    println!("{:?}", map);
+    let map: Arc<HashMap<String, String>> = Arc::new(
+        args.chunks(2)
+            .filter_map(|chunk| {
+                if chunk.len() == 2 && chunk[0].starts_with("--") {
+                    Some((chunk[0][2..].to_string(), chunk[1].clone()))
+                } else {
+                    None
+                }
+            })
+            .collect(),
+    );
 
     for stream in listener.incoming() {
         match stream {
             Ok(s) => {
+                let map = Arc::clone(&map);
                 thread::spawn(move || {
-                    handle_connection(s).unwrap();
+                    handle_connection(Arc::clone(&map), s).unwrap();
                 });
             }
             Err(e) => {
@@ -41,7 +44,10 @@ fn main() {
     }
 }
 
-fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
+fn handle_connection(
+    args: Arc<HashMap<String, String>>,
+    mut stream: TcpStream,
+) -> std::io::Result<()> {
     let request = HttpRequest::new(&stream)?;
 
     let status_line = if request.path == "/" {
@@ -95,7 +101,8 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
             response.as_bytes()
         }
     } else if let Some(file_name) = request.path.strip_prefix("/files/") {
-        let mut f = File::open("/tmp/".to_owned() + file_name)?;
+        let dir = args.get("directory").unwrap();
+        let mut f = File::open(dir.to_string() + file_name)?;
         let mut contents = String::new();
         let bytes = f.read_to_string(&mut contents)?;
 
