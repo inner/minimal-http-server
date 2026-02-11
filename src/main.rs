@@ -7,7 +7,8 @@ use self::http_response::HttpResponse;
 
 use std::borrow::Cow;
 use std::collections::HashMap;
-use std::io::Write;
+use std::fs::File;
+use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
 use std::thread;
 
@@ -81,6 +82,24 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
             };
             response.as_bytes()
         }
+    } else if let Some(file_name) = request.path.strip_prefix("/files/") {
+        let mut f = File::open(file_name)?;
+        let mut contents = String::new();
+        let bytes = f.read_to_string(&mut contents)?;
+
+        let mut headers = HashMap::new();
+        headers.insert(http::headers::CONTENT_LENGTH, Cow::Owned(bytes.to_string()));
+        headers.insert(
+            http::headers::CONTENT_TYPE,
+            Cow::Borrowed(http::headers::OCTET_STREAM),
+        );
+
+        let response = HttpResponse {
+            http_status_line: http::status::OK,
+            headers,
+            body: &contents,
+        };
+        response.as_bytes()
     } else {
         let response = HttpResponse {
             http_status_line: http::status::NOT_FOUND,
