@@ -49,14 +49,16 @@ fn handle_connection(
 ) -> std::io::Result<()> {
     let request = HttpRequest::new(&stream)?;
 
-    let status_line = if request.path == "/" {
+    let status_line = if request.method == "GET" && request.path == "/" {
         let response = HttpResponse {
             http_status_line: http::status::OK,
             headers: HashMap::new(),
             body: "",
         };
         response.as_bytes()
-    } else if let Some(echo) = request.path.strip_prefix("/echo/") {
+    } else if request.method == "GET"
+        && let Some(echo) = request.path.strip_prefix("/echo/")
+    {
         let mut headers = HashMap::new();
         headers.insert(
             http::headers::CONTENT_LENGTH,
@@ -73,7 +75,7 @@ fn handle_connection(
             body: echo,
         };
         response.as_bytes()
-    } else if request.path.starts_with("/user-agent") {
+    } else if request.method == "GET" && request.path.starts_with("/user-agent") {
         if let Some(user_agent) = request.headers.get("user-agent") {
             let mut headers = HashMap::new();
             headers.insert(
@@ -99,7 +101,9 @@ fn handle_connection(
             };
             response.as_bytes()
         }
-    } else if let Some(file_name) = request.path.strip_prefix("/files/") {
+    } else if request.method == "GET"
+        && let Some(file_name) = request.path.strip_prefix("/files/")
+    {
         if let Some(d) = args.get("directory") {
             if let Ok(mut f) = File::open(d.to_string() + file_name) {
                 let mut contents = String::new();
@@ -134,6 +138,15 @@ fn handle_connection(
             };
             response.as_bytes()
         }
+    } else if request.method == "POST"
+        && let Some(_f) = request.path.strip_suffix("/files/")
+    {
+        let response = HttpResponse {
+            http_status_line: http::status::NOT_FOUND,
+            headers: HashMap::new(),
+            body: "",
+        };
+        response.as_bytes()
     } else {
         let response = HttpResponse {
             http_status_line: http::status::NOT_FOUND,
