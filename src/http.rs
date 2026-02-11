@@ -1,6 +1,7 @@
 pub mod status {
     pub const OK: &'static str = "HTTP/1.1 200 OK";
     pub const NOT_FOUND: &'static str = "HTTP/1.1 404 Not Found";
+    pub const CREATED: &'static str = "HTTP/1.1 201 Created";
 }
 
 pub mod headers {

@@ -2,6 +2,7 @@ mod http;
 mod http_request;
 mod http_response;
 
+use self::http::headers;
 use self::http_request::HttpRequest;
 use self::http_response::HttpResponse;
 
@@ -139,14 +140,36 @@ fn handle_connection(
             response.as_bytes()
         }
     } else if request.method == "POST"
-        && let Some(_f) = request.path.strip_suffix("/files/")
+        && let Some(file_name) = request.path.strip_suffix("/files/")
     {
-        let response = HttpResponse {
-            http_status_line: http::status::NOT_FOUND,
-            headers: HashMap::new(),
-            body: "",
-        };
-        response.as_bytes()
+        // let content_length = request.headers.get(http::headers::CONTENT_LENGTH).unwrap();
+
+        if let Some(d) = args.get("directory") {
+            if let Ok(mut f) = File::open(d.to_string() + file_name) {
+                let _ = f.write(&request.body);
+
+                let response = HttpResponse {
+                    http_status_line: http::status::CREATED,
+                    headers: HashMap::new(),
+                    body: "",
+                };
+                response.as_bytes()
+            } else {
+                let response = HttpResponse {
+                    http_status_line: http::status::NOT_FOUND,
+                    headers: HashMap::new(),
+                    body: "",
+                };
+                response.as_bytes()
+            }
+        } else {
+            let response = HttpResponse {
+                http_status_line: http::status::NOT_FOUND,
+                headers: HashMap::new(),
+                body: "",
+            };
+            response.as_bytes()
+        }
     } else {
         let response = HttpResponse {
             http_status_line: http::status::NOT_FOUND,
