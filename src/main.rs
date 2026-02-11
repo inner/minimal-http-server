@@ -10,10 +10,15 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
 use std::net::{TcpListener, TcpStream};
-use std::thread;
+use std::{env, thread};
 
 fn main() {
     let listener = TcpListener::bind("127.0.0.1:4221").unwrap();
+    let mut args = env::args();
+    args.next();
+    for arg in args {
+        println!("{}", arg);
+    }
 
     for stream in listener.incoming() {
         match stream {
@@ -83,7 +88,6 @@ fn handle_connection(mut stream: TcpStream) -> std::io::Result<()> {
             response.as_bytes()
         }
     } else if let Some(file_name) = request.path.strip_prefix("/files/") {
-        println!("{}", file_name);
         let mut f = File::open("/tmp/".to_owned() + file_name)?;
         let mut contents = String::new();
         let bytes = f.read_to_string(&mut contents)?;
