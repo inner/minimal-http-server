@@ -37,7 +37,7 @@ fn main() {
                 });
             }
             Err(e) => {
-                println!("error: {}", e);
+                eprintln!("error: {}", e);
             }
         }
     }
@@ -127,7 +127,6 @@ fn handle_connection(
         && let Some(file_name) = request.path.strip_prefix("/files/")
     {
         if let Some(d) = args.get("directory") {
-            println!("test1");
             if let Ok(mut f) = File::create(d.to_string() + file_name) {
                 let _ = f.write(&request.body);
                 HttpResponse::created().as_bytes()
