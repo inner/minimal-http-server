@@ -1,7 +1,6 @@
+use crate::http;
 use std::borrow::Cow;
 use std::collections::HashMap;
-
-use crate::http;
 
 #[derive(Debug)]
 pub struct HttpResponse<'a> {
