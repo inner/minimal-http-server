@@ -4,7 +4,7 @@ use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct HttpResponse<'a> {
-    pub http_status_line: &'static str,
+    pub status_line: &'static str,
     pub body: &'a str,
     pub headers: HashMap<&'static str, Cow<'static, str>>,
 }
@@ -12,7 +12,7 @@ pub struct HttpResponse<'a> {
 impl<'a> HttpResponse<'a> {
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut response = Vec::new();
-        response.extend_from_slice(self.http_status_line.as_bytes());
+        response.extend_from_slice(self.status_line.as_bytes());
         response.extend_from_slice("\r\n".as_bytes());
 
         for (k, v) in &self.headers {
@@ -33,7 +33,7 @@ impl<'a> HttpResponse<'a> {
 
     pub fn not_found() -> Self {
         HttpResponse {
-            http_status_line: http::status::NOT_FOUND,
+            status_line: http::status::NOT_FOUND,
             body: "",
             headers: HashMap::new(),
         }
@@ -41,7 +41,7 @@ impl<'a> HttpResponse<'a> {
 
     pub fn created() -> Self {
         HttpResponse {
-            http_status_line: http::status::CREATED,
+            status_line: http::status::CREATED,
             body: "",
             headers: HashMap::new(),
         }

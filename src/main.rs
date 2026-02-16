@@ -52,7 +52,7 @@ fn handle_connection(
 
     let status_line = if request.method == "GET" && request.path == "/" {
         let response = HttpResponse {
-            http_status_line: http::status::OK,
+            status_line: http::status::OK,
             headers: HashMap::new(),
             body: "",
         };
@@ -71,7 +71,7 @@ fn handle_connection(
         );
 
         let response = HttpResponse {
-            http_status_line: http::status::OK,
+            status_line: http::status::OK,
             headers,
             body: echo,
         };
@@ -89,7 +89,7 @@ fn handle_connection(
             );
 
             let response = HttpResponse {
-                http_status_line: http::status::OK,
+                status_line: http::status::OK,
                 headers,
                 body: user_agent,
             };
@@ -113,7 +113,7 @@ fn handle_connection(
                 );
 
                 let response = HttpResponse {
-                    http_status_line: http::status::OK,
+                    status_line: http::status::OK,
                     headers,
                     body: &contents,
                 };

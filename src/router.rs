@@ -9,7 +9,7 @@ pub struct Router;
 impl Router {
     pub fn handle<'a>() -> HttpResponse<'a> {
         HttpResponse {
-            http_status_line: OK,
+            status_line: OK,
             headers: HashMap::new(),
             body: "",
         }
