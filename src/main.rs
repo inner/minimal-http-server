@@ -1,6 +1,7 @@
 mod http;
 mod http_request;
 mod http_response;
+mod router;
 
 use self::http_request::HttpRequest;
 use self::http_response::HttpResponse;
