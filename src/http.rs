@@ -5,8 +5,8 @@ pub mod status {
 }
 
 pub mod headers {
-    pub const CONTENT_LENGTH: &str = "Content-Length";
-    pub const CONTENT_TYPE: &str = "Content-Type";
-    pub const TEXT_PLAIN: &str = "text/plain";
-    pub const OCTET_STREAM: &str = "application/octet-stream";
+    pub const CONTENT_LENGTH: &'static str = "Content-Length";
+    pub const CONTENT_TYPE: &'static str = "Content-Type";
+    pub const TEXT_PLAIN: &'static str = "text/plain";
+    pub const OCTET_STREAM: &'static str = "application/octet-stream";
 }
