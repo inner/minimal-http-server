@@ -5,7 +5,25 @@ use std::net::TcpStream;
 const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
 
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[allow(dead_code)]
+pub enum Method {
+    Get,
+    Post,
+    Unknown,
+}
+
+impl From<&str> for Method {
+    fn from(value: &str) -> Self {
+        match value {
+            "GET" => Method::Get,
+            "POST" => Method::Post,
+            _ => Method::Unknown,
+        }
+    }
+}
+
+#[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct HttpRequest {
     pub method: String,
