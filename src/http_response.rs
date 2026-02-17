@@ -1,15 +1,14 @@
 use crate::http;
-use std::borrow::Cow;
 use std::collections::HashMap;
 
 #[derive(Debug)]
-pub struct HttpResponse<'a> {
+pub struct HttpResponse {
     pub status_line: &'static str,
-    pub body: &'a str,
-    pub headers: HashMap<&'static str, Cow<'static, str>>,
+    pub body: Vec<u8>,
+    pub headers: HashMap<&'static str, String>,
 }
 
-impl<'a> HttpResponse<'a> {
+impl HttpResponse {
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut response = Vec::new();
         response.extend_from_slice(self.status_line.as_bytes());
@@ -25,7 +24,7 @@ impl<'a> HttpResponse<'a> {
         response.extend_from_slice("\r\n".as_bytes());
 
         if !self.body.is_empty() {
-            response.extend_from_slice(self.body.as_bytes());
+            response.extend(&self.body);
         }
 
         response
@@ -34,7 +33,7 @@ impl<'a> HttpResponse<'a> {
     pub fn not_found() -> Self {
         HttpResponse {
             status_line: http::status::NOT_FOUND,
-            body: "",
+            body: Vec::new(),
             headers: HashMap::new(),
         }
     }
@@ -42,7 +41,7 @@ impl<'a> HttpResponse<'a> {
     pub fn created() -> Self {
         HttpResponse {
             status_line: http::status::CREATED,
-            body: "",
+            body: Vec::new(),
             headers: HashMap::new(),
         }
     }

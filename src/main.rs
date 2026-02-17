@@ -4,12 +4,10 @@ mod http_response;
 mod router;
 
 use self::http_request::HttpRequest;
-use self::http_response::HttpResponse;
+use self::router::Router;
 
-use std::borrow::Cow;
 use std::collections::HashMap;
-use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::sync::Arc;
 use std::{env, thread};
@@ -49,99 +47,8 @@ fn handle_connection(
     mut stream: TcpStream,
 ) -> std::io::Result<()> {
     let request = HttpRequest::new(&stream)?;
-
-    let status_line = if request.method == "GET" && request.path == "/" {
-        let response = HttpResponse {
-            status_line: http::status::OK,
-            headers: HashMap::new(),
-            body: "",
-        };
-        response.as_bytes()
-    } else if request.method == "GET"
-        && let Some(echo) = request.path.strip_prefix("/echo/")
-    {
-        let mut headers = HashMap::new();
-        headers.insert(
-            http::headers::CONTENT_LENGTH,
-            Cow::Owned(echo.len().to_string()),
-        );
-        headers.insert(
-            http::headers::CONTENT_TYPE,
-            Cow::Borrowed(http::headers::TEXT_PLAIN),
-        );
-
-        let response = HttpResponse {
-            status_line: http::status::OK,
-            headers,
-            body: echo,
-        };
-        response.as_bytes()
-    } else if request.method == "GET" && request.path.starts_with("/user-agent") {
-        if let Some(user_agent) = request.headers.get("user-agent") {
-            let mut headers = HashMap::new();
-            headers.insert(
-                http::headers::CONTENT_LENGTH,
-                Cow::Owned(user_agent.len().to_string()),
-            );
-            headers.insert(
-                http::headers::CONTENT_TYPE,
-                Cow::Borrowed(http::headers::TEXT_PLAIN),
-            );
-
-            let response = HttpResponse {
-                status_line: http::status::OK,
-                headers,
-                body: user_agent,
-            };
-            response.as_bytes()
-        } else {
-            HttpResponse::not_found().as_bytes()
-        }
-    } else if request.method == "GET"
-        && let Some(file_name) = request.path.strip_prefix("/files/")
-    {
-        if let Some(d) = args.get("directory") {
-            if let Ok(mut f) = File::open(d.to_string() + file_name) {
-                let mut contents = String::new();
-                let bytes = f.read_to_string(&mut contents)?;
-
-                let mut headers = HashMap::new();
-                headers.insert(http::headers::CONTENT_LENGTH, Cow::Owned(bytes.to_string()));
-                headers.insert(
-                    http::headers::CONTENT_TYPE,
-                    Cow::Borrowed(http::headers::OCTET_STREAM),
-                );
-
-                let response = HttpResponse {
-                    status_line: http::status::OK,
-                    headers,
-                    body: &contents,
-                };
-                response.as_bytes()
-            } else {
-                HttpResponse::not_found().as_bytes()
-            }
-        } else {
-            HttpResponse::not_found().as_bytes()
-        }
-    } else if request.method == "POST"
-        && let Some(file_name) = request.path.strip_prefix("/files/")
-    {
-        if let Some(d) = args.get("directory") {
-            if let Ok(mut f) = File::create(d.to_string() + file_name) {
-                let _ = f.write(&request.body);
-                HttpResponse::created().as_bytes()
-            } else {
-                HttpResponse::not_found().as_bytes()
-            }
-        } else {
-            HttpResponse::not_found().as_bytes()
-        }
-    } else {
-        HttpResponse::not_found().as_bytes()
-    };
-
-    stream.write_all(&status_line)?;
+    let response = Router::handle(&request, &args);
+    stream.write_all(&response.as_bytes())?;
 
     Ok(())
 }

@@ -26,7 +26,7 @@ impl From<&str> for Method {
 #[derive(Debug, Clone)]
 #[allow(dead_code)]
 pub struct HttpRequest {
-    pub method: String,
+    pub method: Method,
     pub path: String,
     pub version: String,
     pub headers: HashMap<String, String>,
@@ -42,9 +42,10 @@ impl HttpRequest {
 
         let mut parts = http_line.split_whitespace();
 
-        let method = parts
+        let method: Method = parts
             .next()
-            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing method"))?;
+            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing method"))?
+            .into();
 
         let path = parts
             .next()
@@ -94,7 +95,7 @@ impl HttpRequest {
         }
 
         Ok(Self {
-            method: method.to_string(),
+            method: method,
             path: path.to_string(),
             version: version.to_string(),
             headers,
