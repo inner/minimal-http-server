@@ -22,35 +22,14 @@ impl Router {
         if req.path == "/" {
             HttpResponse::ok()
         } else if let Some(echo) = req.path.strip_prefix("/echo/") {
-            // let mut headers = HashMap::new();
-            // headers.insert(http::headers::CONTENT_LENGTH, echo.len().to_string());
-            // headers.insert(
-            //     http::headers::CONTENT_TYPE,
-            //     http::headers::TEXT_PLAIN.to_string(),
-            // );
-            //
-            // HttpResponse {
-            //     status_line: http::status::OK,
-            //     headers,
-            //     body: echo.as_bytes().into(),
-            // }
             HttpResponse::ok()
                 .with_content_type(TEXT_PLAIN)
                 .with_body(echo.as_bytes().into())
         } else if req.path.starts_with("/user-agent") {
             let user_agent = req.headers.get("user-agent").unwrap();
-            let mut headers = HashMap::new();
-            headers.insert(http::headers::CONTENT_LENGTH, user_agent.len().to_string());
-            headers.insert(
-                http::headers::CONTENT_TYPE,
-                http::headers::TEXT_PLAIN.to_string(),
-            );
-
-            HttpResponse {
-                status_line: http::status::OK,
-                headers,
-                body: user_agent.as_bytes().into(),
-            }
+            HttpResponse::ok()
+                .with_content_type(TEXT_PLAIN)
+                .with_body(user_agent.as_bytes().into())
         } else if let Some(file_name) = req.path.strip_prefix("/files/") {
             if let Some(d) = args.get("directory") {
                 if let Ok(mut f) = File::open(d.to_string() + file_name) {
