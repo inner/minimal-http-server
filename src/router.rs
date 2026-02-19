@@ -3,7 +3,7 @@ use std::fs::File;
 use std::io::{Read, Write};
 
 use crate::http;
-use crate::http::headers::TEXT_PLAIN;
+use crate::http::headers::{OCTET_STREAM, TEXT_PLAIN};
 use crate::http_request::{HttpRequest, Method};
 use crate::http_response::HttpResponse;
 
@@ -34,20 +34,10 @@ impl Router {
             if let Some(d) = args.get("directory") {
                 if let Ok(mut f) = File::open(d.to_string() + file_name) {
                     let mut contents: Vec<u8> = Vec::new();
-                    let content_len = f.read_to_end(&mut contents).unwrap();
-
-                    let mut headers = HashMap::new();
-                    headers.insert(http::headers::CONTENT_LENGTH, content_len.to_string());
-                    headers.insert(
-                        http::headers::CONTENT_TYPE,
-                        http::headers::OCTET_STREAM.to_string(),
-                    );
-
-                    HttpResponse {
-                        status_line: http::status::OK,
-                        headers,
-                        body: contents,
-                    }
+                    let _ = f.read_to_end(&mut contents).unwrap();
+                    HttpResponse::ok()
+                        .with_content_type(OCTET_STREAM)
+                        .with_body(contents)
                 } else {
                     HttpResponse::not_found()
                 }
