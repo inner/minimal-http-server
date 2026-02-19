@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
+use std::path::Path;
 
 use crate::http::headers::{OCTET_STREAM, TEXT_PLAIN};
 use crate::http_request::{HttpRequest, Method};
@@ -51,9 +52,8 @@ impl Router {
     fn post(req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {
         if let Some(file_name) = req.path.strip_prefix("/files/") {
             let d = args.get("directory").unwrap();
-            let _f = File::create(d.to_string() + file_name)
-                .unwrap()
-                .write(&req.body);
+            let path = Path::new(d).join(file_name);
+            let _f = File::create(path).unwrap().write(&req.body);
             HttpResponse::created()
         } else {
             HttpResponse::not_found()
