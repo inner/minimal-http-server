@@ -24,11 +24,9 @@ impl From<&str> for Method {
 }
 
 #[derive(Debug, Clone)]
-#[allow(dead_code)]
 pub struct HttpRequest {
     pub method: Method,
     pub path: String,
-    pub version: String,
     pub headers: HashMap<String, String>,
     pub body: Vec<u8>,
 }
@@ -50,10 +48,6 @@ impl HttpRequest {
         let path = parts
             .next()
             .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing path"))?;
-
-        let version = parts
-            .next()
-            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing version"))?;
 
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut total_header_size = 0;
@@ -97,7 +91,6 @@ impl HttpRequest {
         Ok(Self {
             method,
             path: path.to_string(),
-            version: version.to_string(),
             headers,
             body,
         })
