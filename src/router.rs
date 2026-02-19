@@ -21,11 +21,7 @@ impl Router {
 
     fn get(req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {
         if req.path == "/" {
-            HttpResponse {
-                status_line: http::status::OK,
-                headers: HashMap::new(),
-                body: Vec::new(),
-            }
+            HttpResponse::ok()
         } else if let Some(echo) = req.path.strip_prefix("/echo/") {
             let mut headers = HashMap::new();
             headers.insert(http::headers::CONTENT_LENGTH, echo.len().to_string());
