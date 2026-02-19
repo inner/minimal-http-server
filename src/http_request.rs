@@ -95,7 +95,7 @@ impl HttpRequest {
         }
 
         Ok(Self {
-            method: method,
+            method,
             path: path.to_string(),
             version: version.to_string(),
             headers,

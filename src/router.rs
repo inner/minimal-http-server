@@ -6,10 +6,8 @@ use crate::http;
 use crate::http_request::{HttpRequest, Method};
 use crate::http_response::HttpResponse;
 
-#[allow(dead_code)]
 pub struct Router;
 
-#[allow(dead_code)]
 impl Router {
     pub fn handle(req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {
         match req.method {
