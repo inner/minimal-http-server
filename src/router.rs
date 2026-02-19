@@ -2,7 +2,6 @@ use std::collections::HashMap;
 use std::fs::File;
 use std::io::{Read, Write};
 
-use crate::http;
 use crate::http::headers::{OCTET_STREAM, TEXT_PLAIN};
 use crate::http_request::{HttpRequest, Method};
 use crate::http_response::HttpResponse;
