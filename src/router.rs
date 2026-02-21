@@ -1,8 +1,8 @@
 use std::collections::HashMap;
 use std::sync::Arc;
 
-use crate::http_request::{HttpRequest, Method};
-use crate::http_response::HttpResponse;
+use crate::request::{HttpRequest, Method};
+use crate::response::HttpResponse;
 
 pub type Handler = fn(&HttpRequest, &HashMap<String, String>) -> HttpResponse;
 
