@@ -3,14 +3,14 @@ mod http;
 mod request;
 mod response;
 mod router;
-mod thread_pool;
+mod threadpool;
 
 use self::files::FileManager;
 use self::http::headers::{OCTET_STREAM, TEXT_PLAIN};
 use self::request::{HttpRequest, Method};
 use self::response::HttpResponse;
 use self::router::Router;
-use self::thread_pool::ThreadPool;
+use self::threadpool::ThreadPool;
 
 use std::collections::HashMap;
 use std::env;
