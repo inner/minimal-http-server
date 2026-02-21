@@ -15,8 +15,7 @@ use self::thread_pool::ThreadPool;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
-use std::fs::File;
-use std::io::{Read, Write};
+use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::sync::Arc;
@@ -61,20 +60,21 @@ fn handle_read_body(req: &HttpRequest, args: &HashMap<String, String>) -> HttpRe
 }
 
 fn handle_return_file(req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {
-    let file_name = req.path.strip_prefix("/files/").unwrap_or("");
-    if let Some(d) = args.get("directory") {
-        if let Ok(mut f) = File::open(d.to_string() + file_name) {
-            let mut contents: Vec<u8> = Vec::new();
-            let _ = f.read_to_end(&mut contents).unwrap();
-            HttpResponse::ok()
-                .with_content_type(OCTET_STREAM)
-                .with_body(contents)
-        } else {
-            HttpResponse::not_found()
-        }
-    } else {
-        HttpResponse::not_found()
-    }
+    let Some(file_name) = req.path.strip_prefix("/files/") else {
+        return HttpResponse::not_found();
+    };
+
+    let Some(d) = args.get("directory") else {
+        return HttpResponse::not_found();
+    };
+
+    let Ok(contents) = FileManager::read(Path::new(d), file_name) else {
+        return HttpResponse::not_found();
+    };
+
+    HttpResponse::ok()
+        .with_content_type(OCTET_STREAM)
+        .with_body(contents)
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
