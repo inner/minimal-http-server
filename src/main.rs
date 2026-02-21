@@ -1,9 +1,11 @@
+mod files;
 mod http;
 mod http_request;
 mod http_response;
 mod router;
 mod thread_pool;
 
+use self::files::FileManager;
 use self::http::headers::{OCTET_STREAM, TEXT_PLAIN};
 use self::http_request::{HttpRequest, Method};
 use self::http_response::HttpResponse;
@@ -39,10 +41,11 @@ fn handle_user_agent_header_read(req: &HttpRequest, _: &HashMap<String, String>)
 
 fn handle_read_body(req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {
     let file_name = req.path.strip_prefix("/files/").unwrap_or("");
-    let d = args.get("directory").unwrap();
-    let path = Path::new(d).join(file_name);
-    let _f = File::create(path).unwrap().write(&req.body);
-    HttpResponse::created()
+    let path = args.get("directory").unwrap();
+    match FileManager::create(Path::new(path), file_name, &req.body) {
+        Ok(_) => HttpResponse::created(),
+        Err(_) => HttpResponse::not_found(),
+    }
 }
 
 fn handle_return_file(req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {
