@@ -1,14 +1,14 @@
 mod files;
 mod http;
-mod http_request;
-mod http_response;
+mod request;
+mod response;
 mod router;
 mod thread_pool;
 
 use self::files::FileManager;
 use self::http::headers::{OCTET_STREAM, TEXT_PLAIN};
-use self::http_request::{HttpRequest, Method};
-use self::http_response::HttpResponse;
+use self::request::{HttpRequest, Method};
+use self::response::HttpResponse;
 use self::router::Router;
 use self::thread_pool::ThreadPool;
 

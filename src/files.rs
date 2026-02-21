@@ -18,7 +18,7 @@ impl FileManager {
     pub fn read(path: &Path, file_name: &str) -> Result<Vec<u8>, Error> {
         let mut file = File::open(path.join(file_name))?;
         let mut contents: Vec<u8> = Vec::new();
-        let _ = file.read_to_end(&mut contents)?;
+        file.read_to_end(&mut contents)?;
         Ok(contents)
     }
 }
