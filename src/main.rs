@@ -26,22 +26,34 @@ fn handle_root(_: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
 }
 
 fn handle_echo(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
-    let echo = req.path.strip_prefix("/echo/").unwrap_or("");
+    let Some(echo) = req.path.strip_prefix("/echo/") else {
+        return HttpResponse::not_found();
+    };
+
     HttpResponse::ok()
         .with_content_type(TEXT_PLAIN)
         .with_body(echo.as_bytes().into())
 }
 
 fn handle_user_agent_header_read(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
-    let user_agent = req.headers.get("user-agent").unwrap();
+    let Some(user_agent) = req.headers.get("user-agent") else {
+        return HttpResponse::not_found();
+    };
+
     HttpResponse::ok()
         .with_content_type(TEXT_PLAIN)
         .with_body(user_agent.as_bytes().into())
 }
 
 fn handle_read_body(req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {
-    let file_name = req.path.strip_prefix("/files/").unwrap_or("");
-    let path = args.get("directory").unwrap();
+    let Some(file_name) = req.path.strip_prefix("/files/") else {
+        return HttpResponse::not_found();
+    };
+
+    let Some(path) = args.get("directory") else {
+        return HttpResponse::not_found();
+    };
+
     match FileManager::create(Path::new(path), file_name, &req.body) {
         Ok(_) => HttpResponse::created(),
         Err(_) => HttpResponse::not_found(),
