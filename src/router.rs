@@ -1,4 +1,5 @@
 use std::collections::HashMap;
+use std::sync::Arc;
 
 use crate::http_request::{HttpRequest, Method};
 use crate::http_response::HttpResponse;
@@ -16,8 +17,13 @@ impl Router {
         }
     }
 
-    pub fn add(&mut self, method: Method, path: &'static str, handler: Handler) {
+    pub fn add(mut self, method: Method, path: &'static str, handler: Handler) -> Self {
         self.routes.insert((method, path), handler);
+        self
+    }
+
+    pub fn build_arc(self) -> Arc<Self> {
+        Arc::new(self)
     }
 
     pub fn handle(&self, req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {

@@ -77,15 +77,15 @@ fn main() -> Result<(), Box<dyn Error>> {
             .collect(),
     );
 
-    let mut router = Router::new();
-    router.add(Method::Get, "/", handle_root);
-    router.add(Method::Get, "/echo", handle_echo);
-    router.add(Method::Get, "/user-agent", handle_user_agent_header_read);
-    router.add(Method::Get, "/files", handle_return_file);
-    router.add(Method::Post, "/files", handle_read_body);
+    let router = Router::new()
+        .add(Method::Get, "/", handle_root)
+        .add(Method::Get, "/echo", handle_echo)
+        .add(Method::Get, "/user-agent", handle_user_agent_header_read)
+        .add(Method::Get, "/files", handle_return_file)
+        .add(Method::Post, "/files", handle_read_body)
+        .build_arc();
 
     let pool = ThreadPool::build(10)?;
-    let router = Arc::new(router);
     for stream in listener.incoming() {
         match stream {
             Ok(s) => {
@@ -112,7 +112,6 @@ fn handle_connection(
     mut stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
     let request = HttpRequest::new(&stream)?;
-    // let response = Router::handle_req(&request, &args);
     let response = router.handle(&request, &args);
     stream.write_all(&response.as_bytes())?;
 
