@@ -80,7 +80,7 @@ fn handle_return_file(req: &HttpRequest, args: &HashMap<String, String>) -> Http
 fn main() -> Result<(), Box<dyn Error>> {
     let listener = TcpListener::bind("127.0.0.1:4221")?;
     let args: Vec<String> = env::args().skip(1).collect();
-    let map: &'static HashMap<String, String> = Box::leak(Box::new(
+    let map: &HashMap<String, String> = Box::leak(Box::new(
         args.chunks(2)
             .filter_map(|chunk| {
                 if chunk.len() == 2 && chunk[0].starts_with("--") {
