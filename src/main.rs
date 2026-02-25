@@ -18,7 +18,6 @@ use std::error::Error;
 use std::io::Write;
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
-use std::sync::Arc;
 
 fn handle_root(_: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
     HttpResponse::ok()
@@ -92,19 +91,19 @@ fn main() -> Result<(), Box<dyn Error>> {
             .collect(),
     ));
 
-    let router = Router::new()
-        .add(Method::Get, "/", handle_root)
-        .add(Method::Get, "/echo", handle_echo)
-        .add(Method::Get, "/user-agent", handle_user_agent_header_read)
-        .add(Method::Get, "/files", handle_return_file)
-        .add(Method::Post, "/files", handle_read_body)
-        .build_arc();
+    let router = Box::leak(Box::new(
+        Router::new()
+            .add(Method::Get, "/", handle_root)
+            .add(Method::Get, "/echo", handle_echo)
+            .add(Method::Get, "/user-agent", handle_user_agent_header_read)
+            .add(Method::Get, "/files", handle_return_file)
+            .add(Method::Post, "/files", handle_read_body),
+    ));
 
     let pool = ThreadPool::build(10)?;
     for stream in listener.incoming() {
         match stream {
             Ok(s) => {
-                let router = Arc::clone(&router);
                 pool.execute(|| {
                     if let Err(e) = handle_connection(map, router, s) {
                         eprintln!("connection error: {e}");
@@ -122,7 +121,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 
 fn handle_connection(
     args: &HashMap<String, String>,
-    router: Arc<Router>,
+    router: &Router,
     mut stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
     let request = HttpRequest::new(&stream)?;
