@@ -1,4 +1,5 @@
 use crate::http;
+use crate::http::encodings::{DEFLATE, GZIP};
 use crate::http::headers::{CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE};
 use crate::http::status::OK;
 use std::collections::HashMap;
@@ -30,8 +31,10 @@ impl HttpResponse {
         self
     }
 
-    pub fn with_encoding(mut self, enc: String) -> Self {
-        self.headers.insert(CONTENT_ENCODING, enc.to_string());
+    pub fn with_encoding(mut self, encoding: String) -> Self {
+        if encoding == GZIP || encoding == DEFLATE {
+            self.headers.insert(CONTENT_ENCODING, encoding.to_string());
+        }
         self
     }
 
