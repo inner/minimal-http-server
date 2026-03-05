@@ -32,7 +32,7 @@ fn handle_echo(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
         .with_content_type(TEXT_PLAIN)
         .with_body(echo.as_bytes().into());
 
-    let Some(_content_encoding) = req.headers.get(ACCEPT_ENCODING) else {
+    let Some(_content_encoding) = req.headers.get("accept-encoding") else {
         println!("test");
         return res;
     };
