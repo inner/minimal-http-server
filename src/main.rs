@@ -6,7 +6,7 @@ mod router;
 mod threadpool;
 
 use self::files::FileManager;
-use self::http::headers::{OCTET_STREAM, TEXT_PLAIN};
+use self::http::headers::{ACCEPT_ENCODING, OCTET_STREAM, TEXT_PLAIN};
 use self::request::{HttpRequest, Method};
 use self::response::HttpResponse;
 use self::router::Router;
@@ -28,9 +28,15 @@ fn handle_echo(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
         return HttpResponse::not_found();
     };
 
-    HttpResponse::ok()
+    let res = HttpResponse::ok()
         .with_content_type(TEXT_PLAIN)
-        .with_body(echo.as_bytes().into())
+        .with_body(echo.as_bytes().into());
+
+    let Some(_content_encoding) = req.headers.get(ACCEPT_ENCODING) else {
+        return res;
+    };
+
+    res.with_encoding(String::from("gzip"))
 }
 
 fn handle_user_agent_header_read(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {

@@ -1,5 +1,5 @@
 use crate::http;
-use crate::http::headers::{CONTENT_LENGTH, CONTENT_TYPE};
+use crate::http::headers::{CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE};
 use crate::http::status::OK;
 use std::collections::HashMap;
 
@@ -27,6 +27,11 @@ impl HttpResponse {
 
     pub fn with_content_type(mut self, ct: &'static str) -> Self {
         self.headers.insert(CONTENT_TYPE, ct.to_string());
+        self
+    }
+
+    pub fn with_encoding(mut self, enc: String) -> Self {
+        self.headers.insert(CONTENT_LENGTH, enc.to_string());
         self
     }
 
