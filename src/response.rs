@@ -31,7 +31,7 @@ impl HttpResponse {
     }
 
     pub fn with_encoding(mut self, enc: String) -> Self {
-        self.headers.insert(CONTENT_LENGTH, enc.to_string());
+        self.headers.insert(CONTENT_ENCODING, enc.to_string());
         self
     }
 
