@@ -6,7 +6,7 @@ mod router;
 mod threadpool;
 
 use self::files::FileManager;
-use self::http::headers::{OCTET_STREAM, TEXT_PLAIN};
+use self::http::headers::{CONNECTION, OCTET_STREAM, TEXT_PLAIN};
 use self::request::{HttpRequest, Method};
 use self::response::HttpResponse;
 use self::router::Router;
@@ -133,7 +133,12 @@ fn handle_connection(
 ) -> Result<(), Box<dyn Error>> {
     loop {
         let request = HttpRequest::new(&stream)?;
-        let response = router.handle(&request, &args);
+        let mut response = router.handle(&request, &args);
+
+        if request.should_close {
+            response.headers.insert(CONNECTION, "close".to_string());
+        }
+
         stream.write_all(&response.as_bytes())?;
 
         if request.should_close {

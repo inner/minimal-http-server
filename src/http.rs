@@ -6,6 +6,7 @@ pub mod status {
 
 pub mod headers {
     pub const CONTENT_LENGTH: &str = "Content-Length";
+    pub const CONNECTION: &str = "Connection";
     pub const CONTENT_TYPE: &str = "Content-Type";
     pub const CONTENT_ENCODING: &str = "Content-Encoding";
     pub const TEXT_PLAIN: &str = "text/plain";
