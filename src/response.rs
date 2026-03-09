@@ -1,5 +1,9 @@
+use flate2::Compression;
+use flate2::write::GzEncoder;
+use std::io::Write;
+
 use crate::http;
-use crate::http::compression::COMPRESSION_SCHEMES;
+use crate::http::compression::Encoding;
 use crate::http::headers::{CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE};
 use crate::http::status::OK;
 use std::collections::HashMap;
@@ -26,19 +30,36 @@ impl HttpResponse {
         self
     }
 
+    pub fn with_gzip_body(mut self) -> Self {
+        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+        if self.body.len() > 0 {
+            encoder.write_all(&self.body).unwrap();
+            let compressed = encoder.finish().unwrap();
+
+            self.headers
+                .insert(CONTENT_LENGTH, compressed.len().to_string());
+            self.body = compressed;
+        }
+
+        self
+    }
+
     pub fn with_content_type(mut self, ct: &'static str) -> Self {
         self.headers.insert(CONTENT_TYPE, ct.to_string());
         self
     }
 
     pub fn with_encoding(mut self, encoding: String) -> Self {
-        let compression = encoding
+        let matched = encoding
             .split(',')
-            .map(str::trim)
-            .find(|x| COMPRESSION_SCHEMES.contains(x));
+            .find_map(|s| s.trim().parse::<Encoding>().ok());
 
-        if let Some(c) = compression {
-            self.headers.insert(CONTENT_ENCODING, c.to_string());
+        if let Some(enc) = matched {
+            let name = match enc {
+                Encoding::Gzip => "gzip",
+                Encoding::Deflate => "deflate",
+            };
+            self.headers.insert(CONTENT_ENCODING, name.to_string());
         }
 
         self

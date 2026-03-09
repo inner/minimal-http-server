@@ -13,5 +13,26 @@ pub mod headers {
 }
 
 pub mod compression {
-    pub const COMPRESSION_SCHEMES: [&str; 2] = ["gzip", "deflate"];
+    use std::str::FromStr;
+
+    #[derive(Debug, PartialEq)]
+    pub enum Encoding {
+        Gzip,
+        Deflate,
+    }
+
+    #[derive(Debug)]
+    pub struct ParseEncodingError;
+
+    impl FromStr for Encoding {
+        type Err = ParseEncodingError;
+
+        fn from_str(s: &str) -> Result<Self, Self::Err> {
+            match s {
+                "gzip" => Ok(Encoding::Gzip),
+                "deflate" => Ok(Encoding::Deflate),
+                _ => Err(ParseEncodingError),
+            }
+        }
+    }
 }

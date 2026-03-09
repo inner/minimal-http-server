@@ -37,6 +37,7 @@ fn handle_echo(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
     };
 
     res.with_encoding(String::from(content_encoding))
+        .with_gzip_body()
 }
 
 fn handle_user_agent_header_read(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
