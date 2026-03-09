@@ -131,9 +131,15 @@ fn handle_connection(
     router: &Router,
     mut stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
-    let request = HttpRequest::new(&stream)?;
-    let response = router.handle(&request, &args);
-    stream.write_all(&response.as_bytes())?;
+    loop {
+        let request = HttpRequest::new(&stream)?;
+        let response = router.handle(&request, &args);
+        stream.write_all(&response.as_bytes())?;
+
+        if request.should_close {
+            break;
+        }
+    }
 
     Ok(())
 }
