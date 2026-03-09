@@ -1,5 +1,5 @@
 use crate::http;
-use crate::http::encodings::{DEFLATE, GZIP};
+use crate::http::compression::COMPRESSION_SCHEMES;
 use crate::http::headers::{CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE};
 use crate::http::status::OK;
 use std::collections::HashMap;
@@ -32,14 +32,13 @@ impl HttpResponse {
     }
 
     pub fn with_encoding(mut self, encoding: String) -> Self {
-        let compressions = ["gzip", "deflate"];
-        let encoding = encoding
+        let compression = encoding
             .split(',')
             .map(str::trim)
-            .find(|x| compressions.contains(x));
+            .find(|x| COMPRESSION_SCHEMES.contains(x));
 
-        if let Some(e) = encoding {
-            self.headers.insert(CONTENT_ENCODING, e.to_string());
+        if let Some(c) = compression {
+            self.headers.insert(CONTENT_ENCODING, c.to_string());
         }
 
         self

@@ -16,3 +16,7 @@ pub mod encodings {
     pub const GZIP: &str = "gzip";
     pub const DEFLATE: &str = "deflate";
 }
+
+pub mod compression {
+    pub const COMPRESSION_SCHEMES: [&str; 2] = ["gzip", "deflate"];
+}
