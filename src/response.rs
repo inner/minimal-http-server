@@ -32,9 +32,16 @@ impl HttpResponse {
     }
 
     pub fn with_encoding(mut self, encoding: String) -> Self {
-        if encoding == GZIP || encoding == DEFLATE {
-            self.headers.insert(CONTENT_ENCODING, encoding.to_string());
+        let compressions = ["gzip", "deflate"];
+        let encoding = encoding
+            .split(',')
+            .map(str::trim)
+            .find(|x| compressions.contains(x));
+
+        if let Some(e) = encoding {
+            self.headers.insert(CONTENT_ENCODING, e.to_string());
         }
+
         self
     }
 
