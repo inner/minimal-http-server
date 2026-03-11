@@ -57,7 +57,6 @@ impl HttpResponse {
         if let Some(enc) = matched {
             let name = match enc {
                 Encoding::Gzip => "gzip",
-                Encoding::Deflate => "deflate",
             };
             self.headers.insert(CONTENT_ENCODING, name.to_string());
         }

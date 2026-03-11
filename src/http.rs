@@ -19,7 +19,6 @@ pub mod compression {
     #[derive(Debug, PartialEq)]
     pub enum Encoding {
         Gzip,
-        Deflate,
     }
 
     #[derive(Debug)]
@@ -31,7 +30,6 @@ pub mod compression {
         fn from_str(s: &str) -> Result<Self, Self::Err> {
             match s {
                 "gzip" => Ok(Encoding::Gzip),
-                "deflate" => Ok(Encoding::Deflate),
                 _ => Err(ParseEncodingError),
             }
         }
