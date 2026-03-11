@@ -89,12 +89,8 @@ impl HttpRequest {
         }
 
         let mut close_connection = false;
-        if headers.contains_key("connection")
-            && let Some(connection) = headers.get("connection")
-        {
-            if connection == "close" {
-                close_connection = true;
-            }
+        if headers.get("connection").is_some_and(|v| v == "close") {
+            close_connection = true;
         }
 
         Ok(Self {
