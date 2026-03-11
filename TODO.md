@@ -2,7 +2,7 @@
 
 ## Bugs
 
-- [ ] **Path traversal vulnerability** (`files.rs:13,20`) — `file_name` is joined onto the base path with no sanitization. A request like `/files/../../etc/passwd` escapes the directory. Fix: reject names containing `..` or `/`, or canonicalize and verify the result stays under the base path.
+- [x] **Path traversal vulnerability** (`files.rs:13,20`) — Fixed: `FileManager::read` now uses `fs::canonicalize` to resolve the real path and verifies it starts with the base directory, catching both `..` traversal and symlinks. `FileManager::create` rejects any path segment equal to `..` (canonicalize can't be used since the file doesn't exist yet). Note: a production-grade solution would use `openat` with directory file descriptors to eliminate the TOCTOU race condition entirely, but this requires `unsafe` or a crate like `cap-std`.
 - [ ] **BufReader lost on persistent connections** (`main.rs:134`, `request.rs:36`) — `HttpRequest::new` creates a new `BufReader` each loop iteration, discarding any bytes buffered from the previous read. The `BufReader` must outlive the loop and be passed into the request parser.
 - [ ] **Deflate encoding declared but not applied** (`response.rs:52-66`, `http.rs:24`) — `with_encoding` sets `Content-Encoding: deflate` but `with_gzip_body` always uses gzip. Clients requesting deflate get a mismatched response.
 - [ ] **`.unwrap()` panics in `with_gzip_body`** (`response.rs:36-37`) — `encoder.write_all` and `encoder.finish` can fail; panicking here will crash the worker thread. Return a `Result` or handle the error gracefully.
