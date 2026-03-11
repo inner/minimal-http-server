@@ -33,8 +33,6 @@ pub struct HttpRequest {
 
 impl HttpRequest {
     pub fn new(reader: &mut BufReader<&TcpStream>) -> std::io::Result<HttpRequest> {
-        // let mut reader: BufReader<&TcpStream> = BufReader::new(stream);
-
         let mut http_line = String::new();
         reader.read_line(&mut http_line)?;
         if http_line.is_empty() {
