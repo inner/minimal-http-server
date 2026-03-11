@@ -37,6 +37,9 @@ impl HttpRequest {
 
         let mut http_line = String::new();
         reader.read_line(&mut http_line)?;
+        if http_line.is_empty() {
+            return Err(Error::new(ErrorKind::UnexpectedEof, "connection closed"));
+        }
 
         let mut parts = http_line.split_whitespace();
 

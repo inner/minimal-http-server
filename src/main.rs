@@ -15,7 +15,7 @@ use self::threadpool::ThreadPool;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
-use std::io::Write;
+use std::io::{ErrorKind, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 
@@ -132,7 +132,12 @@ fn handle_connection(
     mut stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
     loop {
-        let request = HttpRequest::new(&stream)?;
+        let request = match HttpRequest::new(&stream) {
+            Ok(r) => r,
+            Err(e) if e.kind() == ErrorKind::UnexpectedEof => break,
+            Err(e) => return Err(e.into()),
+        };
+
         let mut response = router.handle(&request, &args);
 
         if request.close_connection {
