@@ -15,7 +15,7 @@ use self::threadpool::ThreadPool;
 use std::collections::HashMap;
 use std::env;
 use std::error::Error;
-use std::io::{ErrorKind, Write};
+use std::io::{BufReader, ErrorKind, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 
@@ -129,10 +129,11 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn handle_connection(
     args: &HashMap<String, String>,
     router: &Router,
-    mut stream: TcpStream,
+    stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
+    let mut reader = BufReader::new(&stream);
     loop {
-        let request = match HttpRequest::new(&stream) {
+        let request = match HttpRequest::new(&mut reader) {
             Ok(r) => r,
             Err(e) if e.kind() == ErrorKind::UnexpectedEof => break,
             Err(e) => return Err(e.into()),
@@ -142,10 +143,10 @@ fn handle_connection(
 
         if request.close_connection {
             response.headers.insert(CONNECTION, "close".to_string());
-            stream.write_all(&response.as_bytes())?;
+            (&stream).write_all(&response.as_bytes())?;
             break;
         } else {
-            stream.write_all(&response.as_bytes())?;
+            (&stream).write_all(&response.as_bytes())?;
         }
     }
 
