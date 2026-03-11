@@ -75,7 +75,6 @@ fn handle_return_file(req: &HttpRequest, args: &HashMap<String, String>) -> Http
     };
 
     let Ok(contents) = FileManager::read(Path::new(d), file_name) else {
-        println!("not found");
         return HttpResponse::not_found();
     };
 
