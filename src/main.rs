@@ -135,14 +135,12 @@ fn handle_connection(
         let request = HttpRequest::new(&stream)?;
         let mut response = router.handle(&request, &args);
 
-        if request.should_close {
+        if request.close_connection {
             response.headers.insert(CONNECTION, "close".to_string());
-        }
-
-        stream.write_all(&response.as_bytes())?;
-
-        if request.should_close {
+            stream.write_all(&response.as_bytes())?;
             break;
+        } else {
+            stream.write_all(&response.as_bytes())?;
         }
     }
 

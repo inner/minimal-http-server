@@ -28,7 +28,7 @@ pub struct HttpRequest {
     pub path: String,
     pub headers: HashMap<String, String>,
     pub body: Vec<u8>,
-    pub should_close: bool,
+    pub close_connection: bool,
 }
 
 impl HttpRequest {
@@ -88,12 +88,12 @@ impl HttpRequest {
             reader.read_exact(&mut body)?;
         }
 
-        let mut should_close = false;
+        let mut close_connection = false;
         if headers.contains_key("connection")
             && let Some(connection) = headers.get("connection")
         {
             if connection == "close" {
-                should_close = true;
+                close_connection = true;
             }
         }
 
@@ -102,7 +102,7 @@ impl HttpRequest {
             path: path.to_string(),
             headers,
             body,
-            should_close,
+            close_connection,
         })
     }
 }
