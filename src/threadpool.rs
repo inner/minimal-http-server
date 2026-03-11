@@ -20,12 +20,9 @@ impl Worker {
                 };
 
                 match job {
-                    Ok(job) => {
-                        println!("Worker {} got a job; executing.", id);
-                        job();
-                    }
+                    Ok(job) => job(),
                     Err(_) => {
-                        println!("Worker {} shutting down.", id);
+                        eprintln!("Worker {} shutting down.", id);
                         break;
                     }
                 }
