@@ -18,7 +18,7 @@
 ## Design
 
 - [ ] **`Box::leak` instead of `Arc`** (`main.rs:89-108`) — `args` and `router` are leaked to get `'static` references for threads. Use `Arc<T>` for explicit, non-leaking shared ownership.
-- [ ] **`workers` is `pub` on `ThreadPool`** (`threadpool.rs:42`) — nothing outside the module uses it; make it private.
+- [x] **`workers` is `pub` on `ThreadPool`** (`threadpool.rs:42`) — Fixed: `workers` is now private.
 - [ ] **HTTP version not parsed** (`request.rs:41-50`) — the version token is discarded. HTTP/1.0 should default `close_connection` to `true`; currently all connections behave as HTTP/1.1.
 
 ## Allocations
