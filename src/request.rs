@@ -1,6 +1,5 @@
 use std::collections::HashMap;
-use std::io::{BufRead, BufReader, Error, ErrorKind, Read};
-use std::net::TcpStream;
+use std::io::{BufRead, Error, ErrorKind};
 
 const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
@@ -32,7 +31,7 @@ pub struct HttpRequest {
 }
 
 impl HttpRequest {
-    pub fn new(reader: &mut BufReader<&TcpStream>) -> std::io::Result<HttpRequest> {
+    pub fn new<R: BufRead>(reader: &mut R) -> std::io::Result<HttpRequest> {
         let mut http_line = String::new();
         reader.read_line(&mut http_line)?;
         if http_line.is_empty() {
