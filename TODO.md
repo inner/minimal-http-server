@@ -19,7 +19,7 @@
 
 - [ ] **`Box::leak` instead of `Arc`** (`main.rs:89-108`) — `args` and `router` are leaked to get `'static` references for threads. Use `Arc<T>` for explicit, non-leaking shared ownership.
 - [x] **`workers` is `pub` on `ThreadPool`** (`threadpool.rs:42`) — Fixed: `workers` is now private.
-- [ ] **HTTP version not parsed** (`request.rs:41-50`) — the version token is discarded. HTTP/1.0 should default `close_connection` to `true`; currently all connections behave as HTTP/1.1.
+- [x] **HTTP version not parsed** (`request.rs:24-39,113-114`) — Fixed: added `Version` enum with `Http10`/`Http11`/`Unknown` variants. `keep_alive` now requires both HTTP/1.1 and the absence of `Connection: close`, so HTTP/1.0 connections correctly default to close.
 
 ## Allocations
 
