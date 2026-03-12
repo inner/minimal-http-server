@@ -1,9 +1,10 @@
 use std::collections::HashMap;
 
+use crate::Args;
 use crate::request::{HttpRequest, Method};
 use crate::response::HttpResponse;
 
-pub type Handler = fn(&HttpRequest, &HashMap<String, String>) -> HttpResponse;
+pub type Handler = fn(&HttpRequest, &Args) -> HttpResponse;
 
 pub struct Router {
     routes: HashMap<(Method, &'static str), Handler>,
@@ -21,7 +22,7 @@ impl Router {
         self
     }
 
-    pub fn handle(&self, req: &HttpRequest, args: &HashMap<String, String>) -> HttpResponse {
+    pub fn handle(&self, req: &HttpRequest, args: &Args) -> HttpResponse {
         let prefix = if req.path == "/" {
             "/"
         } else {
