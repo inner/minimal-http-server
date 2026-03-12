@@ -32,7 +32,7 @@ impl HttpResponse {
 
     pub fn with_gzip_body(mut self) -> Self {
         let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-        if self.body.len() > 0 {
+        if !self.body.is_empty() {
             encoder.write_all(&self.body).unwrap();
             let compressed = encoder.finish().unwrap();
 
