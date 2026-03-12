@@ -10,7 +10,7 @@
 ## Code Smells
 
 - [ ] **Handlers re-parse paths** (`main.rs:27,54,69`) — `handle_echo`, `handle_return_file`, and `handle_read_body` all call `strip_prefix` on the path the router already split. The router should pass the remainder to handlers directly.
-- [ ] **Duplicate `stream.write_all`** (`main.rs:138-144`) — the write appears in both branches of the `close_connection` check. Insert the header conditionally, then write once outside the `if`.
+- [x] **Duplicate `stream.write_all`** (`main.rs:144-152`) — Fixed: header insertion and write are now separated; `write_all` appears once unconditionally, with `break` in a separate `if` block. The `close_connection` check is duplicated but the duplicate write is eliminated.
 - [x] **`find(":")` should be `find(':')`** (`request.rs:69`) — Fixed: changed to a `char` literal.
 - [x] **`if self.body.len() > 0`** (`response.rs:35`) — Fixed: changed to `!self.body.is_empty()`.
 - [x] **Verbose `close_connection` assignment** (`request.rs:91`) — Fixed: collapsed to `let close_connection = headers.get("connection").is_some_and(|v| v == "close");`.
