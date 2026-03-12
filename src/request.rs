@@ -113,6 +113,7 @@ impl HttpRequest {
         let keep_alive =
             !headers.get("connection").is_some_and(|v| v == "close") || version == Version::Http11;
 
+        println!("version: {:?}", version);
         println!("alive: {}", keep_alive);
 
         Ok(Self {
