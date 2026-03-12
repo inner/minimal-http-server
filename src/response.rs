@@ -1,6 +1,6 @@
 use flate2::Compression;
 use flate2::write::GzEncoder;
-use std::io::Write;
+use std::io::{Error, Write};
 
 use crate::http;
 use crate::http::compression::Encoding;
@@ -30,18 +30,18 @@ impl HttpResponse {
         self
     }
 
-    pub fn with_gzip_body(mut self) -> Self {
+    pub fn with_gzip_body(mut self) -> Result<Self, Error> {
         let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
         if !self.body.is_empty() {
-            encoder.write_all(&self.body).unwrap();
-            let compressed = encoder.finish().unwrap();
+            encoder.write_all(&self.body)?;
+            let compressed = encoder.finish()?;
 
             self.headers
                 .insert(CONTENT_LENGTH, compressed.len().to_string());
             self.body = compressed;
         }
 
-        self
+        Ok(self)
     }
 
     pub fn with_content_type(mut self, ct: &'static str) -> Self {

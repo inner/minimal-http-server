@@ -36,8 +36,14 @@ fn handle_echo(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
         return res;
     };
 
-    res.with_encoding(String::from(content_encoding))
+    let Ok(res) = res
+        .with_encoding(String::from(content_encoding))
         .with_gzip_body()
+    else {
+        return HttpResponse::not_found();
+    };
+
+    res
 }
 
 fn handle_user_agent_header_read(req: &HttpRequest, _: &HashMap<String, String>) -> HttpResponse {
