@@ -143,11 +143,10 @@ fn handle_connection(
 
         if request.close_connection {
             response.headers.insert(CONNECTION, "close".to_string());
-            (&stream).write_all(&response.as_bytes())?;
-            break;
-        } else {
-            (&stream).write_all(&response.as_bytes())?;
         }
+
+        (&stream).write_all(&response.as_bytes())?;
+        break;
     }
 
     Ok(())
