@@ -13,7 +13,7 @@
 - [x] **Duplicate `stream.write_all`** (`main.rs:144-152`) — Fixed: renamed `close_connection` field to `keep_alive` on `HttpRequest` (`request.rs:91`), making intent clearer; `write_all` appears once unconditionally, header insertion and `break` are each gated on `!request.keep_alive`.
 - [x] **`find(":")` should be `find(':')`** (`request.rs:69`) — Fixed: changed to a `char` literal.
 - [x] **`if self.body.len() > 0`** (`response.rs:35`) — Fixed: changed to `!self.body.is_empty()`.
-- [x] **Verbose `close_connection` assignment** (`request.rs:91`) — Fixed: collapsed to `let close_connection = headers.get("connection").is_some_and(|v| v == "close");`.
+- [x] **Verbose `close_connection` assignment** (`request.rs:91`) — Fixed: field renamed to `keep_alive`, collapsed to `let keep_alive = !headers.get("connection").is_some_and(|v| v == "close");`.
 
 ## Design
 
