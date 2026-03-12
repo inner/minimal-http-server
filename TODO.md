@@ -13,7 +13,7 @@
 - [ ] **Duplicate `stream.write_all`** (`main.rs:138-144`) — the write appears in both branches of the `close_connection` check. Insert the header conditionally, then write once outside the `if`.
 - [ ] **`find(":")` should be `find(':')`** (`request.rs:69`) — use a `char` literal instead of a string slice for header colon search.
 - [ ] **`if self.body.len() > 0`** (`response.rs:35`) — prefer `!self.body.is_empty()`.
-- [ ] **Verbose `close_connection` assignment** (`request.rs:91-94`) — replace the `let mut` + `if` block with a direct `let close_connection = headers.get("connection").is_some_and(|v| v == "close");`.
+- [x] **Verbose `close_connection` assignment** (`request.rs:91`) — Fixed: collapsed to `let close_connection = headers.get("connection").is_some_and(|v| v == "close");`.
 
 ## Design
 

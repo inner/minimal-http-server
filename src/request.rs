@@ -88,10 +88,7 @@ impl HttpRequest {
             reader.read_exact(&mut body)?;
         }
 
-        let mut close_connection = false;
-        if headers.get("connection").is_some_and(|v| v == "close") {
-            close_connection = true;
-        }
+        let close_connection = headers.get("connection").is_some_and(|v| v == "close");
 
         Ok(Self {
             method,
