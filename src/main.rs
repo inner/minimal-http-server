@@ -146,7 +146,10 @@ fn handle_connection(
         }
 
         (&stream).write_all(&response.as_bytes())?;
-        break;
+
+        if request.close_connection {
+            break;
+        }
     }
 
     Ok(())
