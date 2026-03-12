@@ -140,15 +140,14 @@ fn handle_connection(
         };
 
         let mut response = router.handle(&request, &args);
-        let keep_alive = !request.close_connection;
 
-        if !keep_alive {
+        if !request.keep_alive {
             response.headers.insert(CONNECTION, "close".to_string());
         }
 
         (&stream).write_all(&response.as_bytes())?;
 
-        if !keep_alive {
+        if !request.keep_alive {
             break;
         }
     }
