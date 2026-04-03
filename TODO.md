@@ -28,3 +28,27 @@
 - [ ] **`&'static str` values stored as `String` in headers** (`response.rs:47-49,58-62`) — `ct.to_string()` and encoding names `"gzip"`/`"deflate"` are heap-allocated despite being static. Change the header map value type to `Cow<'static, str>` so static values avoid allocation.
 - [ ] **`as_bytes()` builds an intermediate `Vec<u8>`** (`response.rs:68`) — every response allocates a full buffer before writing to the stream. Replace with `write_to(&self, w: &mut impl Write)` to write headers and body directly.
 - [x] **Args collected to `Vec<String>` for `.chunks(2)`** (`main.rs:99`) — Fixed: replaced entirely by `clap` with `#[derive(Parser)]`. Args are parsed via `Args::parse()`, handlers access `args.directory.as_deref()` directly.
+
+## New Findings (2026-04-03)
+
+### Bugs
+
+- [ ] **Path traversal via absolute path in `FileManager::create`** (`files.rs:17`) — `path.join(file_name)` replaces the base entirely when `file_name` starts with `/` (e.g. `POST /files//etc/passwd` → `file_name = "/etc/passwd"` → writes to `/etc/passwd`). The `..` segment check doesn't catch this. `read()` is safe because it canonicalizes and checks `starts_with(path)`; `create()` needs an equivalent guard (reject if `file_name` starts with `/`, or canonicalize the parent and verify).
+- [ ] **Gzip always applied even when no encoding was negotiated** (`main.rs:39-46`, `response.rs:52-65`) — `handle_echo` always chains `.with_encoding(...).with_gzip_body()`. If `Accept-Encoding` is present but contains no `gzip` (e.g. `br, deflate`), `with_encoding` sets no `Content-Encoding` header, yet `with_gzip_body` still compresses the body. Client receives gzip bytes with no `Content-Encoding` and displays garbage. Fix: only call `with_gzip_body` when `with_encoding` actually matched a supported encoding (check for `Content-Encoding` header presence, or return an `Option`/enum from `with_encoding`).
+- [ ] **Empty body skips gzip but `Content-Encoding: gzip` is already set** (`response.rs:33-45`) — if `with_encoding` sets `Content-Encoding: gzip` and the body happens to be empty, `with_gzip_body` skips compression and returns `Ok(self)` unchanged. The header claims gzip encoding but the body is raw (empty). Clients that strictly validate will reject this.
+- [ ] **No size limit on the request line** (`request.rs:52-56`) — `MAX_HEADER_SIZE` (8 KB) guards headers, but the request line (method + path + version) has no limit. A client can send an arbitrarily large path and the server reads it all into a `String` before any check. Add a limit (e.g. 8 KB) before `read_line` on the first line.
+- [ ] **`thread.join().unwrap()` panics if a worker panicked** (`threadpool.rs:95`) — if a worker thread panicked, `join()` returns `Err` and `unwrap()` causes a double-panic during shutdown, aborting the process. Change to `if let Err(e) = thread.join() { eprintln!("worker {} panicked: {:?}", worker.id, e); }`.
+
+### Correctness
+
+- [ ] **Returns 404 for unknown HTTP methods; should be 405** (`router.rs:38-42`) — HTTP spec requires 405 Method Not Allowed with an `Allow` header listing valid methods for the path.
+- [ ] **`Version::Unknown` silently accepted** (`request.rs:113`) — unknown version strings produce `Version::Unknown`, which is treated as HTTP/1.0. Server should reject with 505 HTTP Version Not Supported.
+- [ ] **Hardcoded loopback bind address** (`main.rs:100`) — `127.0.0.1:4221` only accepts localhost connections. Should bind `0.0.0.0:4221` (or make it configurable via `--host`/`--port` args).
+- [ ] **`create_dir` fails if parent doesn't exist** (`files.rs:14`) — if `--directory /tmp/a/b` is given and `/tmp/a` doesn't exist, `create_dir` errors, which surfaces as a 404. Consider `create_dir_all` or a clearer error response.
+
+### Nits
+
+- [ ] **`Worker::new` returns `Result` but can't fail** (`threadpool.rs:14`) — `thread::spawn` doesn't return a `Result`; the `Result<Self, Box<dyn Error>>` signature is misleading and forces unnecessary `?` propagation.
+- [ ] **Redundant `trim_end().trim()`** (`request.rs:93`) — `trim()` already strips both ends; the leading `trim_end()` is a no-op.
+- [ ] **MIME type values mis-grouped in `headers` module** (`http.rs:12-13`) — `TEXT_PLAIN` and `OCTET_STREAM` are content-type values, not header names; they don't belong alongside `CONTENT_TYPE` etc.
+- [ ] **Non-deterministic header order** (`response.rs:72`) — `HashMap` iteration is randomized per-process, making response headers non-reproducible across runs. `IndexMap` or `BTreeMap` would give stable ordering for easier debugging and testing.
