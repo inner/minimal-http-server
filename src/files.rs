@@ -24,13 +24,13 @@ impl FileManager {
 
     pub fn read(path: &Path, file_name: &str) -> Result<Vec<u8>, Error> {
         let canonical_dir = fs::canonicalize(path)?;
-        let canonical = fs::canonicalize(path.join(file_name))?;
+        let full_path = fs::canonicalize(path.join(file_name))?;
 
-        if !canonical.starts_with(&canonical_dir) {
+        if !full_path.starts_with(&canonical_dir) {
             return Err(Error::new(ErrorKind::PermissionDenied, "invalid path"));
         }
 
-        let mut file = File::open(canonical)?;
+        let mut file = File::open(full_path)?;
         let mut contents: Vec<u8> = Vec::new();
         file.read_to_end(&mut contents)?;
         Ok(contents)
