@@ -1,4 +1,4 @@
-use std::fs::{self, File, create_dir};
+use std::fs::{self, File};
 use std::io::{Error, ErrorKind, Read, Write};
 use std::path::Path;
 
@@ -6,24 +6,27 @@ pub struct FileManager;
 
 impl FileManager {
     pub fn create(path: &Path, file_name: &str, body: &[u8]) -> Result<(), Error> {
-        if file_name.split('/').any(|s| s == "..") {
+        let canonical_dir = fs::canonicalize(path)?;
+
+        let p = Path::new(file_name);
+        if p.components()
+            .any(|c| !matches!(c, std::path::Component::Normal(_)))
+        {
             return Err(Error::new(ErrorKind::PermissionDenied, "invalid path"));
         }
 
-        if !path.exists() {
-            create_dir(path)?;
-        }
+        let full_path = canonical_dir.join(file_name);
 
-        let mut f = File::create(path.join(file_name))?;
-        f.write_all(&body)?;
+        let mut f = File::create(&full_path)?;
+        f.write_all(body)?;
         Ok(())
     }
 
     pub fn read(path: &Path, file_name: &str) -> Result<Vec<u8>, Error> {
-        let full_path = path.join(file_name);
-        let canonical = fs::canonicalize(&full_path)?;
+        let canonical_dir = fs::canonicalize(path)?;
+        let canonical = fs::canonicalize(path.join(file_name))?;
 
-        if !canonical.starts_with(path) {
+        if !canonical.starts_with(&canonical_dir) {
             return Err(Error::new(ErrorKind::PermissionDenied, "invalid path"));
         }
 

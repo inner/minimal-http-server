@@ -61,11 +61,11 @@ fn handle_read_body(req: &HttpRequest, args: &Args) -> HttpResponse {
         return HttpResponse::not_found();
     };
 
-    let Some(path) = args.directory.as_deref() else {
+    let Some(d) = args.directory.as_deref() else {
         return HttpResponse::not_found();
     };
 
-    match FileManager::create(Path::new(path), file_name, &req.body) {
+    match FileManager::create(Path::new(d), file_name, &req.body) {
         Ok(_) => HttpResponse::created(),
         Err(_) => HttpResponse::not_found(),
     }
