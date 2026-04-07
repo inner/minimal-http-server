@@ -41,23 +41,21 @@ impl HttpResponse {
             .find_map(|s| s.trim().parse::<Encoding>().ok());
 
         if let Some(encoding) = matched {
-            let encoding_name = match encoding {
+            match encoding {
                 Encoding::Gzip => {
                     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
                     if !self.body.is_empty() {
                         encoder.write_all(&self.body)?;
                         let compressed = encoder.finish()?;
+
                         self.headers
                             .insert(CONTENT_LENGTH, compressed.len().to_string());
+                        self.headers.insert(CONTENT_ENCODING, "gzip".to_string());
+
                         self.body = compressed;
                     }
-
-                    "gzip"
                 }
             };
-
-            self.headers
-                .insert(CONTENT_ENCODING, encoding_name.to_string());
         }
 
         Ok(self)
