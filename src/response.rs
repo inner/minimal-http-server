@@ -49,7 +49,7 @@ impl HttpResponse {
         self
     }
 
-    pub fn with_encoding(mut self, encoding: String) -> Result<Self, Error> {
+    pub fn with_encoding(&mut self, encoding: String) -> Result<&mut Self, Error> {
         let matched = encoding
             .split(',')
             .find_map(|s| s.trim().parse::<Encoding>().ok());

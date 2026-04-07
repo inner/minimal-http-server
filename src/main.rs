@@ -1,5 +1,6 @@
 mod files;
 mod http;
+mod middlewares;
 mod request;
 mod response;
 mod router;
@@ -31,14 +32,6 @@ fn handle_echo(req: &HttpRequest, _: &Args) -> HttpResponse {
     let res = HttpResponse::ok()
         .with_content_type(TEXT_PLAIN)
         .with_body(echo.as_bytes().into());
-
-    let Some(content_encoding) = req.headers.get("accept-encoding") else {
-        return res;
-    };
-
-    let Ok(res) = res.with_encoding(String::from(content_encoding)) else {
-        return HttpResponse::not_found();
-    };
 
     res
 }

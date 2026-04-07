@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use crate::Args;
+use crate::middlewares::Middlewares;
 use crate::request::{HttpRequest, Method};
 use crate::response::HttpResponse;
 
@@ -36,7 +37,9 @@ impl Router {
         };
 
         if let Some(handler) = self.routes.get(&(req.method, &key)) {
-            handler(req, args)
+            let mut response = handler(req, args);
+            Middlewares::run(req, &mut response);
+            response
         } else {
             HttpResponse::not_found()
         }
