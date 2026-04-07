@@ -30,20 +30,6 @@ impl HttpResponse {
         self
     }
 
-    // pub fn with_gzip_body(mut self) -> Result<Self, Error> {
-    //     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-    //     if !self.body.is_empty() {
-    //         encoder.write_all(&self.body)?;
-    //         let compressed = encoder.finish()?;
-    //
-    //         self.headers
-    //             .insert(CONTENT_LENGTH, compressed.len().to_string());
-    //         self.body = compressed;
-    //     }
-    //
-    //     Ok(self)
-    // }
-
     pub fn with_content_type(mut self, ct: &'static str) -> Self {
         self.headers.insert(CONTENT_TYPE, ct.to_string());
         self

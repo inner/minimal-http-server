@@ -5,12 +5,8 @@ pub struct Middlewares;
 
 impl Middlewares {
     pub fn run<'a>(req: &'a HttpRequest, res: &'a mut HttpResponse) {
-        let Some(content_encoding) = req.headers.get("accept-encoding") else {
-            return;
-        };
-
-        let Ok(_) = res.with_encoding(String::from(content_encoding)) else {
-            return;
-        };
+        if let Some(content_encoding) = req.headers.get("accept-encoding") {
+            let _ = res.with_encoding(String::from(content_encoding));
+        }
     }
 }
