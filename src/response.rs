@@ -30,38 +30,51 @@ impl HttpResponse {
         self
     }
 
-    pub fn with_gzip_body(mut self) -> Result<Self, Error> {
-        let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-        if !self.body.is_empty() {
-            encoder.write_all(&self.body)?;
-            let compressed = encoder.finish()?;
-
-            self.headers
-                .insert(CONTENT_LENGTH, compressed.len().to_string());
-            self.body = compressed;
-        }
-
-        Ok(self)
-    }
+    // pub fn with_gzip_body(mut self) -> Result<Self, Error> {
+    //     let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+    //     if !self.body.is_empty() {
+    //         encoder.write_all(&self.body)?;
+    //         let compressed = encoder.finish()?;
+    //
+    //         self.headers
+    //             .insert(CONTENT_LENGTH, compressed.len().to_string());
+    //         self.body = compressed;
+    //     }
+    //
+    //     Ok(self)
+    // }
 
     pub fn with_content_type(mut self, ct: &'static str) -> Self {
         self.headers.insert(CONTENT_TYPE, ct.to_string());
         self
     }
 
-    pub fn with_encoding(mut self, encoding: String) -> Self {
+    pub fn with_encoding(mut self, encoding: String) -> Result<Self, Error> {
         let matched = encoding
             .split(',')
             .find_map(|s| s.trim().parse::<Encoding>().ok());
 
-        if let Some(enc) = matched {
-            let name = match enc {
-                Encoding::Gzip => "gzip",
+        if let Some(encoding) = matched {
+            let encoding_name = match encoding {
+                Encoding::Gzip => {
+                    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
+                    if !self.body.is_empty() {
+                        encoder.write_all(&self.body)?;
+                        let compressed = encoder.finish()?;
+                        self.headers
+                            .insert(CONTENT_LENGTH, compressed.len().to_string());
+                        self.body = compressed;
+                    }
+
+                    "gzip"
+                }
             };
-            self.headers.insert(CONTENT_ENCODING, name.to_string());
+
+            self.headers
+                .insert(CONTENT_ENCODING, encoding_name.to_string());
         }
 
-        self
+        Ok(self)
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {

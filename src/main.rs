@@ -36,10 +36,7 @@ fn handle_echo(req: &HttpRequest, _: &Args) -> HttpResponse {
         return res;
     };
 
-    let Ok(res) = res
-        .with_encoding(String::from(content_encoding))
-        .with_gzip_body()
-    else {
+    let Ok(res) = res.with_encoding(String::from(content_encoding)) else {
         return HttpResponse::not_found();
     };
 
