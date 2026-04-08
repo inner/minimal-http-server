@@ -11,7 +11,7 @@ pub struct Worker {
 type ReceiverEnd = Arc<Mutex<Receiver<Job>>>;
 
 impl Worker {
-    pub fn new(id: usize, rx: ReceiverEnd) -> Result<Self, Box<dyn Error>> {
+    pub fn new(id: usize, rx: ReceiverEnd) -> Self {
         let thread = thread::spawn(move || {
             loop {
                 let job = {
@@ -29,10 +29,10 @@ impl Worker {
             }
         });
 
-        Ok(Worker {
+        Worker {
             id,
             thread: Some(thread),
-        })
+        }
     }
 }
 
@@ -50,7 +50,7 @@ impl ThreadPool {
 
         let mut workers = Vec::with_capacity(size);
         for id in 0..size {
-            workers.push(Worker::new(id, Arc::clone(&rx))?);
+            workers.push(Worker::new(id, Arc::clone(&rx)));
         }
 
         Ok(ThreadPool {

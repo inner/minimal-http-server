@@ -90,7 +90,7 @@ impl HttpRequest {
 
             if let Some(colon_pos) = header_line.find(':') {
                 let name = header_line[..colon_pos].trim().to_lowercase();
-                let value = header_line[colon_pos + 1..].trim_end().trim().to_string();
+                let value = header_line[colon_pos + 1..].trim().to_string();
                 headers.insert(name, value);
             }
         }
