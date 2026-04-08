@@ -44,7 +44,7 @@ pub struct ThreadPool {
 }
 
 impl ThreadPool {
-    fn new(size: usize) -> Result<Self, Box<dyn Error>> {
+    fn new(size: usize) -> Self {
         let (tx, rx) = mpsc::channel();
         let rx = Arc::new(Mutex::new(rx));
 
@@ -53,15 +53,15 @@ impl ThreadPool {
             workers.push(Worker::new(id, Arc::clone(&rx)));
         }
 
-        Ok(ThreadPool {
+        ThreadPool {
             workers,
             tx: Some(tx),
-        })
+        }
     }
 
     pub fn build(size: usize) -> Result<Self, Box<dyn Error>> {
         if size > 0 {
-            Ok(ThreadPool::new(size)?)
+            Ok(ThreadPool::new(size))
         } else {
             Err(Box::new(std::io::Error::new(
                 std::io::ErrorKind::InvalidInput,
