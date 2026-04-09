@@ -5,6 +5,10 @@ pub struct Middlewares;
 
 impl Middlewares {
     pub fn run<'a>(req: &'a HttpRequest, res: &'a mut HttpResponse) {
+        Self::apply_encoding(req, res);
+    }
+
+    fn apply_encoding<'a>(req: &'a HttpRequest, res: &'a mut HttpResponse) {
         if let Some(content_encoding) = req.headers.get("accept-encoding") {
             let _ = res.with_encoding(String::from(content_encoding));
         }
