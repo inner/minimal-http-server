@@ -1,10 +1,5 @@
-use flate2::Compression;
-use flate2::write::GzEncoder;
-use std::io::{Error, Write};
-
 use crate::http;
-use crate::http::compression::Encoding;
-use crate::http::headers::{CONTENT_ENCODING, CONTENT_LENGTH, CONTENT_TYPE};
+use crate::http::headers::CONTENT_TYPE;
 use crate::http::status::OK;
 use std::collections::HashMap;
 
@@ -25,7 +20,6 @@ impl HttpResponse {
     }
 
     pub fn with_body(mut self, body: Vec<u8>) -> Self {
-        self.headers.insert(CONTENT_LENGTH, body.len().to_string());
         self.body = body;
         self
     }
@@ -33,32 +27,6 @@ impl HttpResponse {
     pub fn with_content_type(mut self, ct: &'static str) -> Self {
         self.headers.insert(CONTENT_TYPE, ct.to_string());
         self
-    }
-
-    pub fn with_encoding(&mut self, encoding: String) -> Result<&mut Self, Error> {
-        let matched = encoding
-            .split(',')
-            .find_map(|s| s.trim().parse::<Encoding>().ok());
-
-        if let Some(encoding) = matched {
-            match encoding {
-                Encoding::Gzip => {
-                    let mut encoder = GzEncoder::new(Vec::new(), Compression::default());
-                    if !self.body.is_empty() {
-                        encoder.write_all(&self.body)?;
-                        let compressed = encoder.finish()?;
-
-                        self.headers
-                            .insert(CONTENT_LENGTH, compressed.len().to_string());
-                        self.headers.insert(CONTENT_ENCODING, "gzip".to_string());
-
-                        self.body = compressed;
-                    }
-                }
-            };
-        }
-
-        Ok(self)
     }
 
     pub fn as_bytes(&self) -> Vec<u8> {

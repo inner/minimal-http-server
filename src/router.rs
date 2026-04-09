@@ -36,12 +36,15 @@ impl Router {
             format!("/{prefix}")
         };
 
+        let mut response: HttpResponse;
+
         if let Some(handler) = self.routes.get(&(req.method, &key)) {
-            let mut response = handler(req, args);
-            Middlewares::run(req, &mut response);
-            response
+            response = handler(req, args);
         } else {
-            HttpResponse::not_found()
+            response = HttpResponse::not_found();
         }
+
+        Middlewares::run(req, &mut response);
+        response
     }
 }
