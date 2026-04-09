@@ -36,7 +36,7 @@
 - [x] **Path traversal via absolute path in `FileManager::create`** (`files.rs:17`) — `path.join(file_name)` replaces the base entirely when `file_name` starts with `/` (e.g. `POST /files//etc/passwd` → `file_name = "/etc/passwd"` → writes to `/etc/passwd`). The `..` segment check doesn't catch this. `read()` is safe because it canonicalizes and checks `starts_with(path)`; `create()` needs an equivalent guard (reject if `file_name` starts with `/`, or canonicalize the parent and verify). Fixed: component check rejects any non-`Normal` segment including `RootDir`.
 - [x] **Gzip always applied even when no encoding was negotiated** (`main.rs:39-46`, `response.rs:52-65`) — Fixed: encoding moved to `Middlewares::run` middleware, which only calls `with_encoding` when `accept-encoding` header is present. `with_gzip_body` removed entirely.
 - [x] **Empty body skips gzip but `Content-Encoding: gzip` is already set** (`response.rs:33-45`) — Fixed: `Content-Encoding` header is now set inside the `if !self.body.is_empty()` guard in `with_encoding`.
-- [ ] **No size limit on the request line** (`request.rs:52-56`) — `MAX_HEADER_SIZE` (8 KB) guards headers, but the request line (method + path + version) has no limit. A client can send an arbitrarily large path and the server reads it all into a `String` before any check. Add a limit (e.g. 8 KB) before `read_line` on the first line.
+- [x] **No size limit on the request line** (`request.rs:52-56`) — Fixed: `MAX_HTTP_LINE_SIZE` (8 KB) added; both the request line and each header line now use `(&mut *reader).take(limit + 1).read_line(...)` to cap allocation before the read, not after.
 - [x] **`thread.join().unwrap()` panics if a worker panicked** (`threadpool.rs:95`) — Fixed: changed to `if thread.join().is_err()` with an `eprintln!`, avoiding double-panic on shutdown.
 
 ### Correctness
@@ -49,6 +49,6 @@
 ### Nits
 
 - [x] **`Worker::new` returns `Result` but can't fail** (`threadpool.rs:14`) — Fixed: return type changed to `Self`; `?` removed from call site. `ThreadPool::new` also simplified to return `Self`.
-- [ ] **Redundant `trim_end().trim()`** (`request.rs:93`) — `trim()` already strips both ends; the leading `trim_end()` is a no-op.
+- [x] **Redundant `trim_end().trim()`** (`request.rs:93`) — Fixed: now just `.trim()`.
 - [ ] **MIME type values mis-grouped in `headers` module** (`http.rs:12-13`) — `TEXT_PLAIN` and `OCTET_STREAM` are content-type values, not header names; they don't belong alongside `CONTENT_TYPE` etc.
 - [ ] **Non-deterministic header order** (`response.rs:72`) — `HashMap` iteration is randomized per-process, making response headers non-reproducible across runs. `IndexMap` or `BTreeMap` would give stable ordering for easier debugging and testing.

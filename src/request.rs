@@ -1,6 +1,7 @@
 use std::collections::HashMap;
-use std::io::{BufRead, Error, ErrorKind, Result};
+use std::io::{BufRead, Error, ErrorKind, Read, Result};
 
+const MAX_HTTP_LINE_SIZE: usize = 8 * 1024;
 const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
 
@@ -50,9 +51,16 @@ pub struct HttpRequest {
 impl HttpRequest {
     pub fn new<R: BufRead>(reader: &mut R) -> Result<HttpRequest> {
         let mut http_line = String::new();
-        reader.read_line(&mut http_line)?;
+        (&mut *reader)
+            .take(MAX_HTTP_LINE_SIZE as u64 + 1)
+            .read_line(&mut http_line)?;
+
         if http_line.is_empty() {
             return Err(Error::new(ErrorKind::UnexpectedEof, "connection closed"));
+        }
+
+        if http_line.len() > MAX_HTTP_LINE_SIZE {
+            return Err(Error::new(ErrorKind::InvalidInput, "http line too large"));
         }
 
         let mut parts = http_line.split_whitespace();
@@ -77,7 +85,9 @@ impl HttpRequest {
 
         loop {
             header_line.clear();
-            reader.read_line(&mut header_line)?;
+            (&mut *reader)
+                .take(MAX_HEADER_SIZE as u64 + 1)
+                .read_line(&mut header_line)?;
 
             total_header_size += header_line.len();
             if total_header_size > MAX_HEADER_SIZE {
