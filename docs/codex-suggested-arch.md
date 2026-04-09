@@ -24,12 +24,12 @@ This document proposes a structure that keeps the project simple but gives it a 
 
 These are the main places where responsibilities are blurred:
 
-- [src/request.rs](/home/inner/github/codecrafters-http-server-rust/src/request.rs#L52): `HttpRequest::new` returns `Result<HttpRequest, io::Error>`, so malformed HTTP, unsupported versions, large payloads, and broken sockets all come back through the same error channel
-- [src/router.rs](/home/inner/github/codecrafters-http-server-rust/src/router.rs#L26): the router both matches routes and runs middleware
-- [src/middlewares.rs](/home/inner/github/codecrafters-http-server-rust/src/middlewares.rs#L12): middleware is a hardcoded post-processing pass rather than an application pipeline
-- [src/response.rs](/home/inner/github/codecrafters-http-server-rust/src/response.rs#L7): responses use raw status lines instead of a typed status code
-- [src/main.rs](/home/inner/github/codecrafters-http-server-rust/src/main.rs#L49): handlers collapse domain failures into ad hoc HTTP responses
-- [src/files.rs](/home/inner/github/codecrafters-http-server-rust/src/files.rs#L8): file service errors are raw I/O errors, so callers have to guess whether they mean `403`, `404`, or `500`
+- [src/request.rs](../src/request.rs#L52): `HttpRequest::new` returns `Result<HttpRequest, io::Error>`, so malformed HTTP, unsupported versions, large payloads, and broken sockets all come back through the same error channel
+- [src/router.rs](../src/router.rs#L26): the router both matches routes and runs middleware
+- [src/middlewares.rs](../src/middlewares.rs#L12): middleware is a hardcoded post-processing pass rather than an application pipeline
+- [src/response.rs](../src/response.rs#L7): responses use raw status lines instead of a typed status code
+- [src/main.rs](../src/main.rs#L49): handlers collapse domain failures into ad hoc HTTP responses
+- [src/files.rs](../src/files.rs#L8): file service errors are raw I/O errors, so callers have to guess whether they mean `403`, `404`, or `500`
 
 ## Recommended Layering
 
@@ -200,7 +200,7 @@ That lets the server runtime map errors correctly:
 - `UnsupportedVersion` -> `505 HTTP Version Not Supported`
 - `Io(_)` -> close connection, optionally log
 
-This is cleaner than the current `handle_connection` logic in [src/main.rs](/home/inner/github/codecrafters-http-server-rust/src/main.rs#L122), where only EOF is handled specially and all other parse failures bubble out as generic errors.
+This is cleaner than the current `handle_connection` logic in [src/main.rs](../src/main.rs#L122), where only EOF is handled specially and all other parse failures bubble out as generic errors.
 
 ## AppError as the HTTP Boundary
 
@@ -273,7 +273,7 @@ fn get_file(ctx: &RequestContext, state: &AppState) -> AppResult<Response> {
 }
 ```
 
-This is the missing separation in the current handlers in [src/main.rs](/home/inner/github/codecrafters-http-server-rust/src/main.rs#L49).
+This is the missing separation in the current handlers in [src/main.rs](../src/main.rs#L49).
 
 ## Router Behavior
 
@@ -295,7 +295,7 @@ pub enum RouteMatch<'a> {
 }
 ```
 
-The current router in [src/router.rs](/home/inner/github/codecrafters-http-server-rust/src/router.rs#L41) only distinguishes “found exact method+prefix” from “404”. That loses the information needed to return `405 Method Not Allowed` with an `Allow` header.
+The current router in [src/router.rs](../src/router.rs#L41) only distinguishes “found exact method+prefix” from “404”. That loses the information needed to return `405 Method Not Allowed` with an `Allow` header.
 
 For this codebase, a linear scan router is acceptable and simpler than a prefix `HashMap`. It also makes route params easier to add later.
 
@@ -339,7 +339,7 @@ This does two things:
 
 ## Middleware Model
 
-The current `Middlewares::run(req, res)` approach in [src/middlewares.rs](/home/inner/github/codecrafters-http-server-rust/src/middlewares.rs#L12) is too limited for growth.
+The current `Middlewares::run(req, res)` approach in [src/middlewares.rs](../src/middlewares.rs#L12) is too limited for growth.
 
 Use an actual middleware chain:
 
@@ -437,7 +437,7 @@ The exact details may change, but the principle should not:
 - finalization runs after middleware
 - finalization is the only place that computes transport headers
 
-Right now, `Content-Length` is added in [src/middlewares.rs](/home/inner/github/codecrafters-http-server-rust/src/middlewares.rs#L47) and `Connection` is added in [src/main.rs](/home/inner/github/codecrafters-http-server-rust/src/main.rs#L137). Those belong together.
+Right now, `Content-Length` is added in [src/middlewares.rs](../src/middlewares.rs#L47) and `Connection` is added in [src/main.rs](../src/main.rs#L137). Those belong together.
 
 ## Compression Middleware
 
@@ -455,7 +455,7 @@ For this codebase, a pragmatic approach is:
 
 - if compression fails unexpectedly, return `AppError::Internal("response compression failed")`
 
-That is stricter than the current code in [src/middlewares.rs](/home/inner/github/codecrafters-http-server-rust/src/middlewares.rs#L30), which logs and keeps going.
+That is stricter than the current code in [src/middlewares.rs](../src/middlewares.rs#L30), which logs and keeps going.
 
 ## Response Type
 
