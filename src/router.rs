@@ -12,22 +12,18 @@ pub enum Match<'r, 'p> {
     NotFound,
 }
 
-#[allow(dead_code)]
 #[derive(Default)]
 struct MethodMap {
     handlers: HashMap<Method, Handler>,
 }
 
-#[allow(unused)]
 pub struct Router {
-    routes: HashMap<(Method, &'static str), Handler>,
     inner: matchit::Router<MethodMap>,
 }
 
 impl Router {
     pub fn new() -> Self {
         Self {
-            routes: HashMap::new(),
             inner: matchit::Router::<MethodMap>::new(),
         }
     }
