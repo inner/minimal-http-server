@@ -89,6 +89,9 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = Arc::new(Args::parse());
     let listener = TcpListener::bind("127.0.0.1:4221")?;
 
+    let r = Router::new();
+    r.route(Method::Get, "/home", handle_echo);
+
     let router = Arc::new(
         Router::new()
             .add(Method::Get, "/", handle_root)
