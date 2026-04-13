@@ -89,8 +89,11 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = Arc::new(Args::parse());
     let listener = TcpListener::bind("127.0.0.1:4221")?;
 
-    let r = Router::new();
-    r.route(Method::Get, "/home", handle_echo);
+    let r = Arc::new(
+        Router::new()
+            .route(Method::Get, "/home/{echo}", handle_echo)
+            .route(Method::Get, "/users", handle_root),
+    );
 
     let router = Arc::new(
         Router::new()
@@ -107,8 +110,9 @@ fn main() -> Result<(), Box<dyn Error>> {
             Ok(s) => {
                 let args = Arc::clone(&args);
                 let router = Arc::clone(&router);
+                let r = Arc::clone(&r);
                 pool.execute(move || {
-                    if let Err(e) = handle_connection(&args, &router, s) {
+                    if let Err(e) = handle_connection(&args, &router, &r, s) {
                         eprintln!("connection error: {e}");
                     }
                 })?;
@@ -125,6 +129,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn handle_connection(
     args: &Args,
     router: &Router,
+    _r: &Router,
     stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = BufReader::new(&stream);
@@ -134,6 +139,13 @@ fn handle_connection(
             Err(e) if e.kind() == ErrorKind::UnexpectedEof => break,
             Err(e) => return Err(e.into()),
         };
+
+        // if let router::Match::Found(h) = r.find(&request.path, &request.method) {
+        //     println!("found!");
+        //     h(&request, &args);
+        // }
+
+        // break;
 
         let mut response = router.handle(&request, &args);
 

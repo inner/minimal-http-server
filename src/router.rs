@@ -7,6 +7,12 @@ use crate::response::HttpResponse;
 
 pub type Handler = fn(&HttpRequest, &Args) -> HttpResponse;
 
+pub enum Match<'a> {
+    Found(&'a Handler),
+    MethodNotAllowed,
+    NotFound,
+}
+
 #[allow(dead_code)]
 #[derive(Default)]
 struct MethodMap {
@@ -32,13 +38,25 @@ impl Router {
         self
     }
 
-    pub fn route(mut self, method: Method, path: &'static str, handler: Handler) {
+    pub fn route(mut self, method: Method, path: &'static str, handler: Handler) -> Self {
         if let Ok(map) = self.inner.at_mut(path) {
             map.value.handlers.insert(method, handler);
         } else {
             let mut map = MethodMap::default();
             map.handlers.insert(method, handler);
             self.inner.insert(path, map).expect("valid route pattern");
+        }
+
+        self
+    }
+
+    pub fn find(&self, path: &str, method: &Method) -> Match<'_> {
+        match self.inner.at(path) {
+            Err(_) => Match::NotFound,
+            Ok(map) => match map.value.handlers.get(method) {
+                Some(handler) => Match::Found(handler),
+                None => Match::MethodNotAllowed,
+            },
         }
     }
 
