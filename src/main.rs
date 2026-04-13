@@ -11,7 +11,7 @@ use self::http::headers::{CONNECTION, OCTET_STREAM, TEXT_PLAIN};
 use self::middlewares::Middlewares;
 use self::request::{HttpRequest, Method};
 use self::response::HttpResponse;
-use self::router::Router;
+use self::router::{Match, Router};
 use self::threadpool::ThreadPool;
 
 use clap::Parser;
@@ -129,9 +129,9 @@ fn handle_connection(
         };
 
         let mut response = match router.find(&request.path, &request.method) {
-            router::Match::Found(handler, params) => handler(&request, &args, &params),
-            router::Match::NotFound => HttpResponse::not_found(),
-            router::Match::MethodNotAllowed => HttpResponse::not_found(),
+            Match::Found(handler, params) => handler(&request, &args, &params),
+            Match::NotFound => HttpResponse::not_found(),
+            Match::MethodNotAllowed => HttpResponse::not_found(),
         };
 
         Middlewares::run(&request, &mut response);
