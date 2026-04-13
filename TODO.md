@@ -9,7 +9,7 @@
 
 ## Code Smells
 
-- [ ] **Handlers re-parse paths** (`main.rs:27,54,69`) — `handle_echo`, `handle_return_file`, and `handle_read_body` all call `strip_prefix` on the path the router already split. The router should pass the remainder to handlers directly.
+- [x] **Handlers re-parse paths** (`main.rs:27,54,69`) — Fixed: router now uses `matchit` with named params (`/echo/{echo}`, `/files/{file}`). Handlers receive `&matchit::Params` and read the segment via `params.get("echo")` / `params.get("file")` with no `strip_prefix` calls.
 - [x] **Duplicate `stream.write_all`** (`main.rs:144-152`) — Fixed: renamed `close_connection` field to `keep_alive` on `HttpRequest` (`request.rs:91`), making intent clearer; `write_all` appears once unconditionally, header insertion and `break` are each gated on `!request.keep_alive`.
 - [x] **`find(":")` should be `find(':')`** (`request.rs:69`) — Fixed: changed to a `char` literal.
 - [x] **`if self.body.len() > 0`** (`response.rs:35`) — Fixed: changed to `!self.body.is_empty()`.
@@ -23,8 +23,8 @@
 
 ## Allocations
 
-- [ ] **`format!("/{prefix}")` on every request** (`router.rs:31-35`) — allocates a `String` per request just for a HashMap lookup. Replace the HashMap with a `Vec<(Method, &'static str, Handler)>` and linear scan to compare `&str` directly, zero allocation per lookup.
-- [ ] **`with_encoding` takes `String` instead of `&str`** (`response.rs:52`, `main.rs:39`) — `String::from(content_encoding)` allocates at the call site just to pass ownership in; the method only calls `.split(',')`. Change the signature to `&str`.
+- [x] **`format!("/{prefix}")` on every request** (`router.rs:31-35`) — Fixed: router now uses `matchit::Router` keyed by the full path; no per-request `format!` allocation. (Note: `routes: HashMap<(Method, &'static str), Handler>` field still exists but is dead/unused — candidate for removal.)
+- [x] **`with_encoding` takes `String` instead of `&str`** (`response.rs:52`, `main.rs:39`) — Fixed (moot): `with_encoding` was removed when encoding moved into `Middlewares::apply_encoding`, which now calls `.split(',')` directly on the `&String` from the header map with no intermediate allocation.
 - [ ] **`&'static str` values stored as `String` in headers** (`response.rs:47-49,58-62`) — `ct.to_string()` and encoding names `"gzip"`/`"deflate"` are heap-allocated despite being static. Change the header map value type to `Cow<'static, str>` so static values avoid allocation.
 - [ ] **`as_bytes()` builds an intermediate `Vec<u8>`** (`response.rs:68`) — every response allocates a full buffer before writing to the stream. Replace with `write_to(&self, w: &mut impl Write)` to write headers and body directly.
 - [x] **Args collected to `Vec<String>` for `.chunks(2)`** (`main.rs:99`) — Fixed: replaced entirely by `clap` with `#[derive(Parser)]`. Args are parsed via `Args::parse()`, handlers access `args.directory.as_deref()` directly.
