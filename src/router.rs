@@ -1,14 +1,13 @@
 use std::collections::HashMap;
 
 use crate::Args;
-use crate::middlewares::Middlewares;
 use crate::request::{HttpRequest, Method};
 use crate::response::HttpResponse;
 
-pub type Handler = fn(&HttpRequest, &Args) -> HttpResponse;
+pub type Handler = fn(&HttpRequest, &Args, &matchit::Params) -> HttpResponse;
 
-pub enum Match<'a> {
-    Found(&'a Handler),
+pub enum Match<'r, 'p> {
+    Found(&'r Handler, matchit::Params<'r, 'p>),
     MethodNotAllowed,
     NotFound,
 }
@@ -33,11 +32,6 @@ impl Router {
         }
     }
 
-    pub fn add(mut self, method: Method, path: &'static str, handler: Handler) -> Self {
-        self.routes.insert((method, path), handler);
-        self
-    }
-
     pub fn route(mut self, method: Method, path: &'static str, handler: Handler) -> Self {
         if let Ok(map) = self.inner.at_mut(path) {
             map.value.handlers.insert(method, handler);
@@ -50,38 +44,13 @@ impl Router {
         self
     }
 
-    pub fn find(&self, path: &str, method: &Method) -> Match<'_> {
+    pub fn find<'r, 'p>(&'r self, path: &'p str, method: &Method) -> Match<'r, 'p> {
         match self.inner.at(path) {
             Err(_) => Match::NotFound,
             Ok(map) => match map.value.handlers.get(method) {
-                Some(handler) => Match::Found(handler),
+                Some(handler) => Match::Found(handler, map.params),
                 None => Match::MethodNotAllowed,
             },
         }
-    }
-
-    pub fn handle(&self, req: &HttpRequest, args: &Args) -> HttpResponse {
-        let prefix = if req.path == "/" {
-            "/"
-        } else {
-            req.path.split('/').nth(1).unwrap_or("")
-        };
-
-        let key = if prefix == "/" {
-            "/".to_string()
-        } else {
-            format!("/{prefix}")
-        };
-
-        let mut response: HttpResponse;
-
-        if let Some(handler) = self.routes.get(&(req.method, &key)) {
-            response = handler(req, args);
-        } else {
-            response = HttpResponse::not_found();
-        }
-
-        Middlewares::run(req, &mut response);
-        response
     }
 }

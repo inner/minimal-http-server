@@ -8,6 +8,7 @@ mod threadpool;
 
 use self::files::FileManager;
 use self::http::headers::{CONNECTION, OCTET_STREAM, TEXT_PLAIN};
+use self::middlewares::Middlewares;
 use self::request::{HttpRequest, Method};
 use self::response::HttpResponse;
 use self::router::Router;
@@ -20,14 +21,12 @@ use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::sync::Arc;
 
-fn handle_root(_: &HttpRequest, _: &Args) -> HttpResponse {
+fn handle_root(_: &HttpRequest, _: &Args, _: &matchit::Params) -> HttpResponse {
     HttpResponse::ok()
 }
 
-fn handle_echo(req: &HttpRequest, _: &Args) -> HttpResponse {
-    let Some(echo) = req.path.strip_prefix("/echo/") else {
-        return HttpResponse::not_found();
-    };
+fn handle_echo(_req: &HttpRequest, _: &Args, params: &matchit::Params) -> HttpResponse {
+    let echo = params.get("echo").unwrap();
 
     let res = HttpResponse::ok()
         .with_content_type(TEXT_PLAIN)
@@ -36,7 +35,7 @@ fn handle_echo(req: &HttpRequest, _: &Args) -> HttpResponse {
     res
 }
 
-fn handle_user_agent_header_read(req: &HttpRequest, _: &Args) -> HttpResponse {
+fn handle_user_agent_header_read(req: &HttpRequest, _: &Args, _: &matchit::Params) -> HttpResponse {
     let Some(user_agent) = req.headers.get("user-agent") else {
         return HttpResponse::not_found();
     };
@@ -46,14 +45,12 @@ fn handle_user_agent_header_read(req: &HttpRequest, _: &Args) -> HttpResponse {
         .with_body(user_agent.as_bytes().into())
 }
 
-fn handle_read_body(req: &HttpRequest, args: &Args) -> HttpResponse {
-    let Some(file_name) = req.path.strip_prefix("/files/") else {
-        return HttpResponse::not_found();
-    };
-
+fn handle_read_body(req: &HttpRequest, args: &Args, params: &matchit::Params) -> HttpResponse {
     let Some(d) = args.directory.as_deref() else {
         return HttpResponse::not_found();
     };
+
+    let file_name = params.get("file").unwrap();
 
     match FileManager::create(Path::new(d), file_name, &req.body) {
         Ok(_) => HttpResponse::created(),
@@ -61,10 +58,8 @@ fn handle_read_body(req: &HttpRequest, args: &Args) -> HttpResponse {
     }
 }
 
-fn handle_return_file(req: &HttpRequest, args: &Args) -> HttpResponse {
-    let Some(file_name) = req.path.strip_prefix("/files/") else {
-        return HttpResponse::not_found();
-    };
+fn handle_return_file(_: &HttpRequest, args: &Args, params: &matchit::Params) -> HttpResponse {
+    let file_name = params.get("file").unwrap();
 
     let Some(d) = args.directory.as_deref() else {
         return HttpResponse::not_found();
@@ -89,19 +84,13 @@ fn main() -> Result<(), Box<dyn Error>> {
     let args = Arc::new(Args::parse());
     let listener = TcpListener::bind("127.0.0.1:4221")?;
 
-    let r = Arc::new(
-        Router::new()
-            .route(Method::Get, "/home/{echo}", handle_echo)
-            .route(Method::Get, "/users", handle_root),
-    );
-
     let router = Arc::new(
         Router::new()
-            .add(Method::Get, "/", handle_root)
-            .add(Method::Get, "/echo", handle_echo)
-            .add(Method::Get, "/user-agent", handle_user_agent_header_read)
-            .add(Method::Get, "/files", handle_return_file)
-            .add(Method::Post, "/files", handle_read_body),
+            .route(Method::Get, "/", handle_root)
+            .route(Method::Get, "/echo/{echo}", handle_echo)
+            .route(Method::Get, "/user-agent", handle_user_agent_header_read)
+            .route(Method::Get, "/files/{file}", handle_return_file)
+            .route(Method::Post, "/files/{file}", handle_read_body),
     );
 
     let pool = ThreadPool::build(10)?;
@@ -110,9 +99,8 @@ fn main() -> Result<(), Box<dyn Error>> {
             Ok(s) => {
                 let args = Arc::clone(&args);
                 let router = Arc::clone(&router);
-                let r = Arc::clone(&r);
                 pool.execute(move || {
-                    if let Err(e) = handle_connection(&args, &router, &r, s) {
+                    if let Err(e) = handle_connection(&args, &router, s) {
                         eprintln!("connection error: {e}");
                     }
                 })?;
@@ -129,10 +117,10 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn handle_connection(
     args: &Args,
     router: &Router,
-    _r: &Router,
     stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = BufReader::new(&stream);
+
     loop {
         let request = match HttpRequest::new(&mut reader) {
             Ok(r) => r,
@@ -140,14 +128,13 @@ fn handle_connection(
             Err(e) => return Err(e.into()),
         };
 
-        // if let router::Match::Found(h) = r.find(&request.path, &request.method) {
-        //     println!("found!");
-        //     h(&request, &args);
-        // }
+        let mut response = match router.find(&request.path, &request.method) {
+            router::Match::Found(handler, params) => handler(&request, &args, &params),
+            router::Match::NotFound => HttpResponse::not_found(),
+            router::Match::MethodNotAllowed => HttpResponse::not_found(),
+        };
 
-        // break;
-
-        let mut response = router.handle(&request, &args);
+        Middlewares::run(&request, &mut response);
 
         if !request.keep_alive {
             response.headers.insert(CONNECTION, "close".to_string());
