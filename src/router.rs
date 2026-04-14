@@ -28,7 +28,7 @@ impl Router {
         }
     }
 
-    pub fn route(mut self, method: Method, path: &'static str, handler: Handler) -> Self {
+    pub fn route(mut self, method: Method, path: &str, handler: Handler) -> Self {
         if let Ok(map) = self.inner.at_mut(path) {
             map.value.handlers.insert(method, handler);
         } else {
