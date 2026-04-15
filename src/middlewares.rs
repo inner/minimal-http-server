@@ -1,5 +1,5 @@
 use crate::http::compression::Encoding;
-use crate::http::headers::{CONTENT_ENCODING, CONTENT_LENGTH};
+use crate::http::headers::{CONNECTION, CONTENT_ENCODING, CONTENT_LENGTH};
 use crate::request::HttpRequest;
 use crate::response::HttpResponse;
 use flate2::Compression;
@@ -12,6 +12,14 @@ impl Middlewares {
     pub fn run(req: &HttpRequest, res: &mut HttpResponse) {
         Self::apply_encoding(req, res);
         Self::apply_content_length(res);
+        Self::apply_keep_alive_headers(req, res);
+    }
+
+    fn apply_keep_alive_headers(req: &HttpRequest, res: &mut HttpResponse) {
+        let close: &'static str = "close";
+        if !req.keep_alive {
+            res.headers.insert(CONNECTION, close.to_string());
+        }
     }
 
     fn apply_encoding(req: &HttpRequest, res: &mut HttpResponse) {

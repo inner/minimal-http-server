@@ -136,10 +136,6 @@ fn handle_connection(
 
         Middlewares::run(&request, &mut response);
 
-        if !request.keep_alive {
-            response.headers.insert(CONNECTION, "close".to_string());
-        }
-
         (&stream).write_all(&response.as_bytes())?;
 
         if !request.keep_alive {
