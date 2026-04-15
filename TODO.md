@@ -15,4 +15,3 @@
 
 - [ ] **MIME type values mis-grouped in `headers` module** (`http.rs:12-13`) — `TEXT_PLAIN` and `OCTET_STREAM` are content-type values, not header names; they don't belong alongside `CONTENT_TYPE` etc.
 - [ ] **Non-deterministic header order** (`response.rs:37`) — `HashMap` iteration is randomized per-process, making response headers non-reproducible across runs. `IndexMap` or `BTreeMap` would give stable ordering for easier debugging and testing.
-- [ ] **Dead `routes` HashMap field on `Router`** (`router.rs:23`) — leftover from pre-`matchit` implementation, marked `#[allow(unused)]`. Delete the field and the `HashMap` import.

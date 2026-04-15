@@ -123,7 +123,7 @@ fn handle_connection(
 
     loop {
         let request = match HttpRequest::new(&mut reader) {
-            Ok(r) => r,
+            Ok(req) => req,
             Err(e) if e.kind() == ErrorKind::UnexpectedEof => break,
             Err(e) => return Err(e.into()),
         };

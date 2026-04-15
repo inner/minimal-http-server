@@ -34,7 +34,7 @@ impl Router {
         } else {
             let mut map = MethodMap::default();
             map.handlers.insert(method, handler);
-            self.inner.insert(path, map).expect("valid route pattern");
+            let _ = self.inner.insert(path, map);
         }
 
         self
