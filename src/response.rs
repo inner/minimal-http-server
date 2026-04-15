@@ -58,6 +58,14 @@ impl HttpResponse {
         }
     }
 
+    pub fn not_allowed() -> Self {
+        Self {
+            status_line: http::status::NOT_ALLOWED,
+            body: Vec::new(),
+            headers: HashMap::new(),
+        }
+    }
+
     pub fn created() -> Self {
         Self {
             status_line: http::status::CREATED,

@@ -131,7 +131,7 @@ fn handle_connection(
         let mut response = match router.find(&request.path, &request.method) {
             Match::Found(handler, params) => handler(&request, &args, &params),
             Match::NotFound => HttpResponse::not_found(),
-            Match::MethodNotAllowed => HttpResponse::not_found(),
+            Match::MethodNotAllowed => HttpResponse::not_allowed(),
         };
 
         Middlewares::run(&request, &mut response);
