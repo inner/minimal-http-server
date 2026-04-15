@@ -7,7 +7,7 @@ mod router;
 mod threadpool;
 
 use self::files::FileManager;
-use self::http::headers::{CONNECTION, OCTET_STREAM, TEXT_PLAIN};
+use self::http::headers::{OCTET_STREAM, TEXT_PLAIN};
 use self::middlewares::Middlewares;
 use self::request::{HttpRequest, Method};
 use self::response::HttpResponse;
