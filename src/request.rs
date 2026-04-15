@@ -12,6 +12,16 @@ pub enum Method {
     Unknown,
 }
 
+impl Method {
+    pub fn as_str(&self) -> &'static str {
+        match self {
+            Method::Get => "GET",
+            Method::Post => "POST",
+            Method::Unknown => "",
+        }
+    }
+}
+
 impl From<&str> for Method {
     fn from(value: &str) -> Self {
         match value {

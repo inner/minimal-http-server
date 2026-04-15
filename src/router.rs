@@ -8,7 +8,7 @@ pub type Handler = fn(&HttpRequest, &Args, &matchit::Params) -> HttpResponse;
 
 pub enum Match<'r, 'p> {
     Found(&'r Handler, matchit::Params<'r, 'p>),
-    MethodNotAllowed,
+    MethodNotAllowed(Vec<Method>),
     NotFound,
 }
 
@@ -45,7 +45,7 @@ impl Router {
             Err(_) => Match::NotFound,
             Ok(map) => match map.value.handlers.get(method) {
                 Some(handler) => Match::Found(handler, map.params),
-                None => Match::MethodNotAllowed,
+                None => Match::MethodNotAllowed(map.value.handlers.keys().copied().collect()),
             },
         }
     }

@@ -11,6 +11,7 @@ pub mod headers {
     pub const CONTENT_TYPE: &str = "Content-Type";
     pub const CONTENT_ENCODING: &str = "Content-Encoding";
     pub const TEXT_PLAIN: &str = "text/plain";
+    pub const ALLOW: &str = "Allow";
     pub const OCTET_STREAM: &str = "application/octet-stream";
 }
 

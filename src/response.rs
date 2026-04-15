@@ -1,6 +1,7 @@
 use crate::http;
-use crate::http::headers::CONTENT_TYPE;
+use crate::http::headers::{ALLOW, CONTENT_TYPE};
 use crate::http::status::OK;
+use crate::request::Method;
 use std::collections::HashMap;
 
 #[derive(Debug)]
@@ -58,11 +59,21 @@ impl HttpResponse {
         }
     }
 
-    pub fn not_allowed() -> Self {
+    pub fn not_allowed(allowed: &[Method]) -> Self {
+        let value = allowed
+            .iter()
+            .filter(|m| **m != Method::Unknown)
+            .map(|m| m.as_str())
+            .collect::<Vec<_>>()
+            .join(", ");
+
+        let mut headers = HashMap::new();
+        headers.insert(ALLOW, value);
+
         Self {
             status_line: http::status::NOT_ALLOWED,
             body: Vec::new(),
-            headers: HashMap::new(),
+            headers,
         }
     }
 
