@@ -1,7 +1,5 @@
 # TODO
 
-## Correctness
-
 ## Allocations
 
 - [ ] **`&'static str` values stored as `String` in headers** (`response.rs:10`) — `ct.to_string()` and `"gzip"` are heap-allocated despite being static. Change the header map value type to `Cow<'static, str>` so static values avoid allocation.
