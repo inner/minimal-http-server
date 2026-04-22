@@ -10,7 +10,7 @@ It is intentionally small in scope. The goal is not to compete with production w
 
 This project explores the fundamentals of building an HTTP server in Rust from raw TCP I/O up through routing and response generation.
 
-This repository is part of that transition. I wanted a project that forced me to work directly with:
+It was built to work directly with:
 
 - TCP sockets
 - HTTP request parsing
@@ -99,8 +99,6 @@ curl -i http://127.0.0.1:4221/files/demo.txt
 The code in this repository was written by me.
 
 AI tools were used in a supporting role, closer to searchable reference material or an interactive technical assistant than a code generator. I used AI to sanity-check ideas, compare design options, and clarify protocol or Rust-specific details, but not to generate the implementation wholesale.
-
-That distinction matters to me because the point of this project was to learn the mechanics directly, not to outsource them.
 
 ## What I Would Improve Next
 
