@@ -1,8 +1,6 @@
 # Rust HTTP Server
 
-A small HTTP server written in Rust on top of `TcpListener`/`TcpStream`.
-
-This project started as a solution to the [Codecrafters "Build Your Own HTTP Server" challenge](https://app.codecrafters.io/courses/http-server/overview), then evolved into a personal learning project focused on understanding how request parsing, routing, response generation, and concurrency work at a lower level.
+A small HTTP server written in Rust on top of `TcpListener`/`TcpStream`, originally built as part of the Codecrafters "Build Your Own HTTP Server" challenge.
 
 It is intentionally small in scope. The goal is not to compete with production web frameworks, but to demonstrate hands-on Rust work in networking, parsing, error handling, and systems-oriented design.
 
