@@ -8,7 +8,7 @@ It is intentionally small in scope. The goal is not to compete with production w
 
 ## Why This Project Exists
 
-I work primarily in .NET, but I am interested in moving into Rust roles over time.
+This project explores the fundamentals of building an HTTP server in Rust from raw TCP I/O up through routing and response generation.
 
 This repository is part of that transition. I wanted a project that forced me to work directly with:
 
