@@ -28,6 +28,16 @@ impl Router {
         }
     }
 
+    pub fn add(&mut self, method: Method, path: &str, handler: Handler) {
+        if let Ok(map) = self.inner.at_mut(path) {
+            map.value.handlers.insert(method, handler);
+        } else {
+            let mut map = MethodMap::default();
+            map.handlers.insert(method, handler);
+            let _ = self.inner.insert(path, map);
+        }
+    }
+
     pub fn route(mut self, method: Method, path: &str, handler: Handler) -> Self {
         if let Ok(map) = self.inner.at_mut(path) {
             map.value.handlers.insert(method, handler);
