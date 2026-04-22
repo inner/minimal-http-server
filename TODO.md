@@ -3,7 +3,6 @@
 ## Correctness
 
 - [ ] **`Version::Unknown` silently accepted** (`request.rs:124`) — unknown version strings produce `Version::Unknown`, which is treated as non-keep-alive but not rejected. Server should reject with 505 HTTP Version Not Supported.
-- [ ] **Hardcoded loopback bind address** (`main.rs:85`) — `127.0.0.1:4221` only accepts localhost connections. Should bind `0.0.0.0:4221` (or make it configurable via `--host`/`--port` args).
 
 ## Allocations
 
