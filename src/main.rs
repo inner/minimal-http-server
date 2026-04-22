@@ -16,7 +16,7 @@ use self::threadpool::ThreadPool;
 
 use clap::Parser;
 use std::error::Error;
-use std::io::{BufReader, ErrorKind, Write};
+use std::io::{BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::sync::Arc;
@@ -124,7 +124,6 @@ fn handle_connection(
     loop {
         let request = match HttpRequest::new(&mut reader) {
             Ok(req) => req,
-            Err(e) if e.kind() == ErrorKind::UnexpectedEof => break,
             Err(e) => return Err(e.into()),
         };
 
