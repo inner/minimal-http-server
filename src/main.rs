@@ -82,7 +82,7 @@ struct Args {
 
 fn main() -> Result<(), Box<dyn Error>> {
     let args = Arc::new(Args::parse());
-    let listener = TcpListener::bind("127.0.0.1:4221")?;
+    let listener = TcpListener::bind("0.0.0.0:4221")?;
 
     let router = Arc::new(
         Router::new()
