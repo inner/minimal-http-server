@@ -2,8 +2,6 @@
 
 ## Correctness
 
-- [ ] **`Version::Unknown` silently accepted** (`request.rs:124`) — unknown version strings produce `Version::Unknown`, which is treated as non-keep-alive but not rejected. Server should reject with 505 HTTP Version Not Supported.
-
 ## Allocations
 
 - [ ] **`&'static str` values stored as `String` in headers** (`response.rs:10`) — `ct.to_string()` and `"gzip"` are heap-allocated despite being static. Change the header map value type to `Cow<'static, str>` so static values avoid allocation.
