@@ -4,7 +4,6 @@ use std::path::{Component, Path, PathBuf};
 
 pub type FileResult<T> = Result<T, FileError>;
 
-#[derive(Debug)]
 pub enum FileError {
     InvalidPath,
     NotFound,
