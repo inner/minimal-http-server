@@ -30,21 +30,50 @@ impl StatusCode {
     }
 }
 
-// pub mod status {
-//     pub const OK: &str = "HTTP/1.1 200 OK";
-//     pub const NOT_ALLOWED: &str = "HTTP/1.1 405 Method Not Allowed";
-//     pub const CREATED: &str = "HTTP/1.1 201 Created";
-//     pub const NOT_FOUND: &str = "HTTP/1.1 404 Not Found";
-// }
+#[allow(unused)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum HeaderName {
+    ContentLength,
+    ContentType,
+    Connection,
+    ContentEncoding,
+    AcceptEncoding,
+    UserAgent,
+    Allow,
+    Custom(String),
+}
 
-pub mod headers {
-    pub const CONTENT_LENGTH: &str = "Content-Length";
-    pub const CONNECTION: &str = "Connection";
-    pub const CONTENT_TYPE: &str = "Content-Type";
-    pub const CONTENT_ENCODING: &str = "Content-Encoding";
-    pub const TEXT_PLAIN: &str = "text/plain";
-    pub const ALLOW: &str = "Allow";
-    pub const OCTET_STREAM: &str = "application/octet-stream";
+impl HeaderName {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::ContentLength => "Content-Length",
+            Self::ContentType => "Content-Type",
+            Self::Connection => "Connection",
+            Self::ContentEncoding => "Content-Encoding",
+            Self::AcceptEncoding => "Accept-Encoding",
+            Self::UserAgent => "User-Agent",
+            Self::Allow => "Allow",
+            Self::Custom(value) => value.as_str(),
+        }
+    }
+}
+
+#[allow(unused)]
+#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+pub enum HeaderValue {
+    TextPlain,
+    OctetStream,
+    Custom(String),
+}
+
+impl HeaderValue {
+    pub fn as_str(&self) -> &str {
+        match self {
+            Self::TextPlain => "text/plain",
+            Self::OctetStream => "application/octet-stream",
+            Self::Custom(value) => value.as_str(),
+        }
+    }
 }
 
 pub mod compression {

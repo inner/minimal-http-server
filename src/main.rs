@@ -8,7 +8,7 @@ mod router;
 mod threadpool;
 
 use self::files::FileManager;
-use self::http::headers::{OCTET_STREAM, TEXT_PLAIN};
+use self::http::HeaderValue;
 use self::middlewares::Middlewares;
 use self::request::{HttpRequest, Method};
 use self::response::HttpResponse;
@@ -30,7 +30,7 @@ fn handle_echo(_req: &HttpRequest, _: &Args, params: &matchit::Params) -> HttpRe
     let echo = params.get("echo").unwrap();
 
     let res = HttpResponse::ok()
-        .with_content_type(TEXT_PLAIN)
+        .with_content_type(HeaderValue::TextPlain)
         .with_body(echo.as_bytes().into());
 
     res
@@ -42,7 +42,7 @@ fn handle_user_agent_header_read(req: &HttpRequest, _: &Args, _: &matchit::Param
     };
 
     HttpResponse::ok()
-        .with_content_type(TEXT_PLAIN)
+        .with_content_type(HeaderValue::TextPlain)
         .with_body(user_agent.as_bytes().into())
 }
 
@@ -71,7 +71,7 @@ fn handle_return_file(_: &HttpRequest, args: &Args, params: &matchit::Params) ->
     };
 
     HttpResponse::ok()
-        .with_content_type(OCTET_STREAM)
+        .with_content_type(HeaderValue::OctetStream)
         .with_body(contents)
 }
 

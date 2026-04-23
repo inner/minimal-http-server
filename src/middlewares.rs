@@ -1,5 +1,5 @@
+use crate::http::HeaderName;
 use crate::http::compression::Encoding;
-use crate::http::headers::{CONNECTION, CONTENT_ENCODING, CONTENT_LENGTH};
 use crate::request::HttpRequest;
 use crate::response::HttpResponse;
 use flate2::Compression;
@@ -18,7 +18,8 @@ impl Middlewares {
     fn apply_keep_alive_headers(req: &HttpRequest, res: &mut HttpResponse) {
         let close: &'static str = "close";
         if !req.keep_alive {
-            res.headers.insert(CONNECTION, close.to_string());
+            res.headers
+                .insert(HeaderName::Connection, close.to_string());
         }
     }
 
@@ -40,7 +41,8 @@ impl Middlewares {
                             Ok(_) => match encoder.finish() {
                                 Ok(encoded) => {
                                     res.body = encoded;
-                                    res.headers.insert(CONTENT_ENCODING, "gzip".to_string());
+                                    res.headers
+                                        .insert(HeaderName::ContentEncoding, "gzip".to_string());
                                 }
                                 Err(e) => eprintln!("error encoding finish(): {}", e),
                             },
@@ -54,6 +56,6 @@ impl Middlewares {
 
     fn apply_content_length(res: &mut HttpResponse) {
         res.headers
-            .insert(CONTENT_LENGTH, res.body.len().to_string());
+            .insert(HeaderName::ContentLength, res.body.len().to_string());
     }
 }

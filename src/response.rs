@@ -1,13 +1,14 @@
-use crate::http::StatusCode;
-use crate::http::headers::{ALLOW, CONTENT_TYPE};
+use crate::http::{HeaderName, HeaderValue, StatusCode};
 use crate::request::Method;
 use std::collections::HashMap;
+
+type HeaderMap = HashMap<HeaderName, String>;
 
 #[derive(Debug)]
 pub struct HttpResponse {
     pub status: StatusCode,
     pub body: Vec<u8>,
-    pub headers: HashMap<&'static str, String>,
+    pub headers: HeaderMap,
 }
 
 impl HttpResponse {
@@ -24,8 +25,9 @@ impl HttpResponse {
         self
     }
 
-    pub fn with_content_type(mut self, ct: &'static str) -> Self {
-        self.headers.insert(CONTENT_TYPE, ct.to_string());
+    pub fn with_content_type(mut self, ct: HeaderValue) -> Self {
+        self.headers
+            .insert(HeaderName::ContentType, ct.as_str().to_string());
         self
     }
 
@@ -37,7 +39,7 @@ impl HttpResponse {
         response.extend_from_slice(b"\r\n");
 
         for (k, v) in &self.headers {
-            response.extend_from_slice(k.as_bytes());
+            response.extend_from_slice(k.as_str().as_bytes());
             response.extend_from_slice(b": ");
             response.extend_from_slice(v.as_bytes());
             response.extend_from_slice(b"\r\n");
@@ -69,7 +71,7 @@ impl HttpResponse {
             .join(", ");
 
         let mut headers = HashMap::new();
-        headers.insert(ALLOW, value);
+        headers.insert(HeaderName::Allow, value);
 
         Self {
             status: StatusCode::MethodNotAllowed,
