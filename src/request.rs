@@ -32,9 +32,40 @@ impl From<&str> for Method {
     }
 }
 
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
+pub enum Version {
+    Http10,
+    Http11,
+    Unknown,
+}
+
+impl From<&str> for Version {
+    fn from(s: &str) -> Self {
+        match s {
+            "HTTP/1.0" => Version::Http10,
+            "HTTP/1.1" => Version::Http11,
+            _ => Version::Unknown,
+        }
+    }
+}
+
+#[allow(dead_code)]
+pub enum RequestParseError {
+    ConnectionClosed,
+    InvalidRequestLine,
+    InvalidHeader,
+    HeadersTooLarge,
+    BodyTooLarge,
+    UnsupportedMethod,
+    UnsupportedVersion,
+    Io(std::io::Error),
+}
+
+#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct HttpRequest {
     pub method: Method,
+    pub version: Version,
     pub path: String,
     pub headers: HashMap<String, String>,
     pub body: Vec<u8>,
@@ -66,6 +97,11 @@ impl HttpRequest {
         let path = parts
             .next()
             .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing path"))?;
+
+        let version: Version = parts
+            .next()
+            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing version"))?
+            .into();
 
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut total_header_size = 0;
@@ -108,10 +144,12 @@ impl HttpRequest {
             reader.read_exact(&mut body)?;
         }
 
-        let keep_alive = !headers.get("connection").is_some_and(|v| v == "close");
+        let keep_alive =
+            !headers.get("connection").is_some_and(|v| v == "close") && version == Version::Http11;
 
         Ok(Self {
             method,
+            version,
             path: path.to_string(),
             headers,
             body,
