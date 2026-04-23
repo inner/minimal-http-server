@@ -1,38 +1,60 @@
 use std::fs::{self, File};
 use std::io::{Error, ErrorKind, Read, Write};
-use std::path::Path;
+use std::path::{Component, Path, PathBuf};
+
+pub type FileResult<T> = Result<T, FileError>;
+
+#[derive(Debug)]
+pub enum FileError {
+    InvalidPath,
+    NotFound,
+    PermissionDenied,
+    Io(Error),
+}
+
+fn map_io_error(err: std::io::Error) -> FileError {
+    match err.kind() {
+        ErrorKind::NotFound => FileError::NotFound,
+        ErrorKind::PermissionDenied => FileError::PermissionDenied,
+        _ => FileError::Io(err),
+    }
+}
+
+fn validate_file_name(file_name: &str) -> FileResult<()> {
+    let path = Path::new(file_name);
+    if path
+        .components()
+        .any(|c| !matches!(c, Component::Normal(_)))
+    {
+        return Err(FileError::InvalidPath);
+    }
+
+    Ok(())
+}
+
+fn resolve_path(path: &Path, file_name: &str) -> FileResult<PathBuf> {
+    validate_file_name(file_name)?;
+    let canonincal_path = fs::canonicalize(path).map_err(map_io_error)?;
+    Ok(canonincal_path.join(file_name))
+}
 
 pub struct FileManager;
 
 impl FileManager {
-    pub fn create(path: &Path, file_name: &str, body: &[u8]) -> Result<(), Error> {
-        let canonical_dir = fs::canonicalize(path)?;
+    pub fn create(path: &Path, file_name: &str, body: &[u8]) -> FileResult<()> {
+        let full_path = resolve_path(path, file_name)?;
 
-        let p = Path::new(file_name);
-        if p.components()
-            .any(|c| !matches!(c, std::path::Component::Normal(_)))
-        {
-            return Err(Error::new(ErrorKind::PermissionDenied, "invalid path"));
-        }
-
-        let full_path = canonical_dir.join(file_name);
-
-        let mut f = File::create(&full_path)?;
-        f.write_all(body)?;
+        let mut f = File::create(&full_path).map_err(map_io_error)?;
+        f.write_all(body).map_err(map_io_error)?;
         Ok(())
     }
 
-    pub fn read(path: &Path, file_name: &str) -> Result<Vec<u8>, Error> {
-        let canonical_dir = fs::canonicalize(path)?;
-        let full_path = fs::canonicalize(path.join(file_name))?;
+    pub fn read(path: &Path, file_name: &str) -> FileResult<Vec<u8>> {
+        let full_path = resolve_path(path, file_name)?;
 
-        if !full_path.starts_with(&canonical_dir) {
-            return Err(Error::new(ErrorKind::PermissionDenied, "invalid path"));
-        }
-
-        let mut file = File::open(full_path)?;
+        let mut file = File::open(full_path).map_err(map_io_error)?;
         let mut contents: Vec<u8> = Vec::new();
-        file.read_to_end(&mut contents)?;
+        file.read_to_end(&mut contents).map_err(map_io_error)?;
         Ok(contents)
     }
 }
