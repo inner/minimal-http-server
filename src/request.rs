@@ -1,6 +1,8 @@
 use std::collections::HashMap;
 use std::io::{BufRead, Error, ErrorKind, Read, Result};
 
+use crate::http::HeaderName;
+
 const MAX_HTTP_LINE_SIZE: usize = 8 * 1024;
 const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
