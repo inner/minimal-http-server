@@ -7,7 +7,6 @@ mod response;
 mod router;
 mod threadpool;
 
-use self::app::App;
 use self::files::FileManager;
 use self::http::headers::{OCTET_STREAM, TEXT_PLAIN};
 use self::middlewares::Middlewares;

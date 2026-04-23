@@ -1,12 +1,11 @@
-use crate::http;
+use crate::http::StatusCode;
 use crate::http::headers::{ALLOW, CONTENT_TYPE};
-use crate::http::status::OK;
 use crate::request::Method;
 use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct HttpResponse {
-    pub status_line: &'static str,
+    pub status: StatusCode,
     pub body: Vec<u8>,
     pub headers: HashMap<&'static str, String>,
 }
@@ -14,7 +13,7 @@ pub struct HttpResponse {
 impl HttpResponse {
     pub fn ok() -> Self {
         Self {
-            status_line: OK,
+            status: StatusCode::Ok,
             headers: HashMap::new(),
             body: Vec::new(),
         }
@@ -32,7 +31,9 @@ impl HttpResponse {
 
     pub fn as_bytes(&self) -> Vec<u8> {
         let mut response = Vec::new();
-        response.extend_from_slice(self.status_line.as_bytes());
+        response.extend_from_slice(
+            format!("HTTP/1.1 {} {}", self.status as u16, self.status.reason()).as_bytes(),
+        );
         response.extend_from_slice(b"\r\n");
 
         for (k, v) in &self.headers {
@@ -53,7 +54,7 @@ impl HttpResponse {
 
     pub fn not_found() -> Self {
         Self {
-            status_line: http::status::NOT_FOUND,
+            status: StatusCode::NotFound,
             body: Vec::new(),
             headers: HashMap::new(),
         }
@@ -71,7 +72,7 @@ impl HttpResponse {
         headers.insert(ALLOW, value);
 
         Self {
-            status_line: http::status::NOT_ALLOWED,
+            status: StatusCode::MethodNotAllowed,
             body: Vec::new(),
             headers,
         }
@@ -79,7 +80,7 @@ impl HttpResponse {
 
     pub fn created() -> Self {
         Self {
-            status_line: http::status::CREATED,
+            status: StatusCode::Created,
             body: Vec::new(),
             headers: HashMap::new(),
         }
