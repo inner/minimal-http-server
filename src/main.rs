@@ -21,6 +21,7 @@ use std::io::{BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::sync::Arc;
+use crate::request::ParseErrorAction;
 
 pub type AppResult<T> = Result<T, AppError>;
 
@@ -175,20 +176,19 @@ fn handle_connection(
     loop {
         let request = match HttpRequest::parse(&mut reader) {
             Ok(req) => req,
-            Err(err) => {
-                let Some(mut response) = err.into_response() else {
+            Err(err) => match err.into_action() {
+                ParseErrorAction::Close => break,
+                ParseErrorAction::Respond(mut response) => {
+                    response
+                        .headers
+                        .insert(HeaderName::Connection, "close".to_string());
+                    response
+                        .headers
+                        .insert(HeaderName::ContentLength, response.body.len().to_string());
+
+                    (&stream).write_all(&response.as_bytes())?;
                     break;
-                };
-
-                response
-                    .headers
-                    .insert(HeaderName::Connection, "close".to_string());
-                response
-                    .headers
-                    .insert(HeaderName::ContentLength, response.body.len().to_string());
-
-                (&stream).write_all(&response.as_bytes())?;
-                break;
+                }
             }
         };
 

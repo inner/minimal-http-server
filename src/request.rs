@@ -79,19 +79,29 @@ impl From<std::io::Error> for RequestParseError {
     }
 }
 
+pub enum ParseErrorAction {
+    Close,
+    Respond(HttpResponse),
+}
+
 impl RequestParseError {
-    pub fn into_response(self) -> Option<HttpResponse> {
+    pub fn into_action(self) -> ParseErrorAction {
         match self {
-            RequestParseError::ConnectionClosed => None,
-            RequestParseError::InvalidRequestLine | RequestParseError::UnsupportedMethod => {
-                Some(HttpResponse::bad_request())
+            RequestParseError::ConnectionClosed => ParseErrorAction::Close,
+            RequestParseError::InvalidRequestLine
+            | RequestParseError::UnsupportedMethod => {
+                ParseErrorAction::Respond(HttpResponse::bad_request())
             }
-            RequestParseError::HeadersTooLarge => Some(HttpResponse::request_headers_too_large()),
-            RequestParseError::BodyTooLarge => Some(HttpResponse::payload_too_large()),
+            RequestParseError::HeadersTooLarge => {
+                ParseErrorAction::Respond(HttpResponse::request_headers_too_large())
+            }
+            RequestParseError::BodyTooLarge => {
+                ParseErrorAction::Respond(HttpResponse::payload_too_large())
+            }
             RequestParseError::UnsupportedVersion => {
-                Some(HttpResponse::http_version_not_supported())
+                ParseErrorAction::Respond(HttpResponse::http_version_not_supported())
             }
-            RequestParseError::Io(_) => None,
+            RequestParseError::Io(_) => ParseErrorAction::Close,
         }
     }
 }
