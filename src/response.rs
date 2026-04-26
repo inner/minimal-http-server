@@ -12,14 +12,6 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
-    pub fn ok() -> Self {
-        Self {
-            status: StatusCode::Ok,
-            headers: HashMap::new(),
-            body: Vec::new(),
-        }
-    }
-
     pub fn with_body(mut self, body: Vec<u8>) -> Self {
         self.body = body;
         self
@@ -54,9 +46,41 @@ impl HttpResponse {
         response
     }
 
+    pub fn ok() -> Self {
+        Self {
+            status: StatusCode::Ok,
+            headers: HashMap::new(),
+            body: Vec::new(),
+        }
+    }
+
+    pub fn created() -> Self {
+        Self {
+            status: StatusCode::Created,
+            body: Vec::new(),
+            headers: HashMap::new(),
+        }
+    }
+
     pub fn not_found() -> Self {
         Self {
             status: StatusCode::NotFound,
+            body: Vec::new(),
+            headers: HashMap::new(),
+        }
+    }
+
+    pub fn bad_request() -> Self {
+        Self {
+            status: StatusCode::BadRequest,
+            body: Vec::new(),
+            headers: HashMap::new(),
+        }
+    }
+
+    pub fn forbidden() -> Self {
+        Self {
+            status: StatusCode::Forbidden,
             body: Vec::new(),
             headers: HashMap::new(),
         }
@@ -80,9 +104,9 @@ impl HttpResponse {
         }
     }
 
-    pub fn created() -> Self {
+    pub fn internal_server_error() -> Self {
         Self {
-            status: StatusCode::Created,
+            status: StatusCode::InternalServerError,
             body: Vec::new(),
             headers: HashMap::new(),
         }

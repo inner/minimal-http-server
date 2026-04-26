@@ -12,7 +12,7 @@ pub enum FileError {
     Io(Error),
 }
 
-fn map_io_error(err: std::io::Error) -> FileError {
+fn map_io_error(err: Error) -> FileError {
     match err.kind() {
         ErrorKind::NotFound => FileError::NotFound,
         ErrorKind::PermissionDenied => FileError::PermissionDenied,
@@ -34,8 +34,8 @@ fn validate_file_name(file_name: &str) -> FileResult<()> {
 
 fn resolve_path(path: &Path, file_name: &str) -> FileResult<PathBuf> {
     validate_file_name(file_name)?;
-    let canonincal_path = fs::canonicalize(path).map_err(map_io_error)?;
-    Ok(canonincal_path.join(file_name))
+    let canonical_path = fs::canonicalize(path).map_err(map_io_error)?;
+    Ok(canonical_path.join(file_name))
 }
 
 pub struct FileManager;

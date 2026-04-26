@@ -17,10 +17,36 @@ use self::threadpool::ThreadPool;
 
 use clap::Parser;
 use std::error::Error;
-use std::io::{BufReader, Write};
+use std::io::{BufReader, ErrorKind, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::sync::Arc;
+
+pub type AppResult<T> = Result<T, AppError>;
+
+pub enum AppError {
+    BadRequest(&'static str),
+    Forbidden(&'static str),
+    NotFound,
+    MethodNotAllowed { allow: Vec<Method> },
+    Internal(&'static str),
+}
+
+pub trait IntoResponse {
+    fn into_response(self) -> HttpResponse;
+}
+
+impl IntoResponse for AppError {
+    fn into_response(self) -> HttpResponse {
+        match self {
+            Self::BadRequest(_) => HttpResponse::bad_request(),
+            Self::Forbidden(_) => HttpResponse::forbidden(),
+            Self::NotFound => HttpResponse::not_found(),
+            Self::MethodNotAllowed { allow } => HttpResponse::not_allowed(&allow),
+            Self::Internal(_) => HttpResponse::internal_server_error(),
+        }
+    }
+}
 
 fn handle_root(_: &HttpRequest, _: &Args, _: &matchit::Params) -> HttpResponse {
     HttpResponse::ok()
@@ -131,7 +157,9 @@ fn handle_connection(
     loop {
         let request = match HttpRequest::parse(&mut reader) {
             Ok(req) => req,
-            Err(e) => return Err(e.into()),
+            Err(_) => return Err(Box::new(std::io::Error::new(
+                ErrorKind::Other, "just wrong error here for now"
+            ))),
         };
 
         let mut response = match router.find(&request.path, &request.method) {

@@ -1,9 +1,6 @@
 use std::collections::HashMap;
-use std::io::{BufRead, Error, ErrorKind, Read, Result};
-
-const MAX_HTTP_LINE_SIZE: usize = 8 * 1024;
-const MAX_HEADER_SIZE: usize = 8 * 1024;
-const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
+use std::io::{BufRead, Read};
+use std::str::SplitWhitespace;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
 pub enum Method {
@@ -50,18 +47,6 @@ impl From<&str> for Version {
 }
 
 #[allow(dead_code)]
-pub enum RequestParseError {
-    ConnectionClosed,
-    InvalidRequestLine,
-    InvalidHeader,
-    HeadersTooLarge,
-    BodyTooLarge,
-    UnsupportedMethod,
-    UnsupportedVersion,
-    Io(std::io::Error),
-}
-
-#[allow(dead_code)]
 #[derive(Debug, Clone)]
 pub struct HttpRequest {
     pub method: Method,
@@ -72,36 +57,75 @@ pub struct HttpRequest {
     pub keep_alive: bool,
 }
 
+const MAX_HTTP_LINE_SIZE: usize = 8 * 1024;
+const MAX_HEADER_SIZE: usize = 8 * 1024;
+const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
+
+pub enum RequestParseError {
+    ConnectionClosed,
+    InvalidRequestLine,
+    HeadersTooLarge,
+    BodyTooLarge,
+    UnsupportedMethod,
+    UnsupportedVersion,
+    Io(std::io::Error),
+}
+
+impl From<std::io::Error> for RequestParseError {
+    fn from(value: std::io::Error) -> Self {
+        Self::Io(value)
+    }
+}
+
+pub type RequestResult<T> = Result<T, RequestParseError>;
+
+fn parse_method(parts: &mut SplitWhitespace) -> RequestResult<Method> {
+    let method_str = parts.next().ok_or(RequestParseError::InvalidRequestLine)?;
+    let method = Method::from(method_str);
+
+    if method == Method::Unknown {
+        return Err(RequestParseError::UnsupportedMethod);
+    }
+
+    Ok(method)
+}
+
+fn parse_path<'a>(parts: &mut SplitWhitespace<'a>) -> RequestResult<&'a str> {
+    let path = parts.next().ok_or(RequestParseError::InvalidRequestLine)?;
+    Ok(path)
+}
+
+fn parse_version(parts: &mut SplitWhitespace) -> RequestResult<Version> {
+    let version_str = parts.next().ok_or(RequestParseError::InvalidRequestLine)?;
+    let version = Version::from(version_str);
+
+    if version == Version::Unknown {
+        return Err(RequestParseError::UnsupportedVersion);
+    }
+
+    Ok(version)
+}
+
 impl HttpRequest {
-    pub fn parse<R: BufRead>(reader: &mut R) -> Result<HttpRequest> {
+    pub fn parse<R: BufRead>(reader: &mut R) -> RequestResult<HttpRequest> {
         let mut http_line = String::new();
         reader
             .take(MAX_HTTP_LINE_SIZE as u64 + 1)
             .read_line(&mut http_line)?;
 
         if http_line.is_empty() {
-            return Err(Error::new(ErrorKind::UnexpectedEof, "connection closed"));
+            return Err(RequestParseError::ConnectionClosed);
         }
 
         if http_line.len() > MAX_HTTP_LINE_SIZE {
-            return Err(Error::new(ErrorKind::InvalidInput, "http line too large"));
+            return Err(RequestParseError::InvalidRequestLine);
         }
 
         let mut parts = http_line.split_whitespace();
 
-        let method: Method = parts
-            .next()
-            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing method"))?
-            .into();
-
-        let path = parts
-            .next()
-            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing path"))?;
-
-        let version: Version = parts
-            .next()
-            .ok_or_else(|| Error::new(ErrorKind::InvalidData, "missing version"))?
-            .into();
+        let method = parse_method(&mut parts)?;
+        let path = parse_path(&mut parts)?;
+        let version = parse_version(&mut parts)?;
 
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut total_header_size = 0;
@@ -115,7 +139,7 @@ impl HttpRequest {
 
             total_header_size += header_line.len();
             if total_header_size > MAX_HEADER_SIZE {
-                return Err(Error::new(ErrorKind::InvalidInput, "headers too large"));
+                return Err(RequestParseError::HeadersTooLarge);
             }
 
             if header_line == "\r\n" || header_line == "\n" {
@@ -135,7 +159,7 @@ impl HttpRequest {
             .unwrap_or(0);
 
         if content_length > MAX_BODY_SIZE {
-            return Err(Error::new(ErrorKind::InvalidInput, "body too large"));
+            return Err(RequestParseError::BodyTooLarge);
         }
 
         let mut body = Vec::new();
