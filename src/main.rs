@@ -129,7 +129,7 @@ fn handle_connection(
     let mut reader = BufReader::new(&stream);
 
     loop {
-        let request = match HttpRequest::new(&mut reader) {
+        let request = match HttpRequest::parse(&mut reader) {
             Ok(req) => req,
             Err(e) => return Err(e.into()),
         };
