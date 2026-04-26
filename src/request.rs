@@ -75,7 +75,7 @@ pub struct HttpRequest {
 impl HttpRequest {
     pub fn parse<R: BufRead>(reader: &mut R) -> Result<HttpRequest> {
         let mut http_line = String::new();
-        (&mut *reader)
+        reader
             .take(MAX_HTTP_LINE_SIZE as u64 + 1)
             .read_line(&mut http_line)?;
 
@@ -109,7 +109,7 @@ impl HttpRequest {
 
         loop {
             header_line.clear();
-            (&mut *reader)
+            reader
                 .take(MAX_HEADER_SIZE as u64 + 1)
                 .read_line(&mut header_line)?;
 
