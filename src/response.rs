@@ -12,6 +12,14 @@ pub struct HttpResponse {
 }
 
 impl HttpResponse {
+    pub fn new(status: StatusCode) -> Self {
+        Self {
+            status,
+            body: Vec::new(),
+            headers: HashMap::new(),
+        }
+    }
+
     pub fn with_body(mut self, body: Vec<u8>) -> Self {
         self.body = body;
         self
@@ -20,6 +28,11 @@ impl HttpResponse {
     pub fn with_content_type(mut self, ct: HeaderValue) -> Self {
         self.headers
             .insert(HeaderName::ContentType, ct.as_str().to_string());
+        self
+    }
+
+    pub fn with_header(mut self, name: HeaderName, value: String) -> Self {
+        self.headers.insert(name, value);
         self
     }
 
@@ -47,67 +60,35 @@ impl HttpResponse {
     }
 
     pub fn ok() -> Self {
-        Self {
-            status: StatusCode::Ok,
-            headers: HashMap::new(),
-            body: Vec::new(),
-        }
+        Self::new(StatusCode::Ok)
     }
 
     pub fn created() -> Self {
-        Self {
-            status: StatusCode::Created,
-            body: Vec::new(),
-            headers: HashMap::new(),
-        }
+        Self::new(StatusCode::Created)
     }
 
     pub fn not_found() -> Self {
-        Self {
-            status: StatusCode::NotFound,
-            body: Vec::new(),
-            headers: HashMap::new(),
-        }
+        Self::new(StatusCode::NotFound)
     }
 
     pub fn bad_request() -> Self {
-        Self {
-            status: StatusCode::BadRequest,
-            body: Vec::new(),
-            headers: HashMap::new(),
-        }
+        Self::new(StatusCode::BadRequest)
     }
 
     pub fn payload_too_large() -> Self {
-        Self {
-            status: StatusCode::PayloadTooLarge,
-            body: Vec::new(),
-            headers: HashMap::new(),
-        }
+        Self::new(StatusCode::PayloadTooLarge)
     }
 
     pub fn request_headers_too_large() -> Self {
-        Self {
-            status: StatusCode::RequestHeadersTooLarge,
-            body: Vec::new(),
-            headers: HashMap::new(),
-        }
+        Self::new(StatusCode::RequestHeadersTooLarge)
     }
 
     pub fn http_version_not_supported() -> Self {
-        Self {
-            status: StatusCode::HttpVersionNotSupported,
-            body: Vec::new(),
-            headers: HashMap::new(),
-        }
+        Self::new(StatusCode::HttpVersionNotSupported)
     }
 
     pub fn forbidden() -> Self {
-        Self {
-            status: StatusCode::Forbidden,
-            body: Vec::new(),
-            headers: HashMap::new(),
-        }
+        Self::new(StatusCode::Forbidden)
     }
 
     pub fn not_allowed(allowed: &[Method]) -> Self {
@@ -118,21 +99,10 @@ impl HttpResponse {
             .collect::<Vec<_>>()
             .join(", ");
 
-        let mut headers = HashMap::new();
-        headers.insert(HeaderName::Allow, value);
-
-        Self {
-            status: StatusCode::MethodNotAllowed,
-            body: Vec::new(),
-            headers,
-        }
+        Self::new(StatusCode::MethodNotAllowed).with_header(HeaderName::Allow, value)
     }
 
     pub fn internal_server_error() -> Self {
-        Self {
-            status: StatusCode::InternalServerError,
-            body: Vec::new(),
-            headers: HashMap::new(),
-        }
+        Self::new(StatusCode::InternalServerError)
     }
 }
