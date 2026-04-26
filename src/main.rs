@@ -8,7 +8,7 @@ mod router;
 mod threadpool;
 
 use self::files::FileManager;
-use self::http::HeaderValue;
+use self::http::{HeaderName, HeaderValue};
 use self::middlewares::Middlewares;
 use self::request::{HttpRequest, Method};
 use self::response::HttpResponse;
@@ -18,7 +18,7 @@ use self::threadpool::ThreadPool;
 use crate::files::FileError;
 use clap::Parser;
 use std::error::Error;
-use std::io::{BufReader, ErrorKind, Write};
+use std::io::{BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::sync::Arc;
@@ -33,11 +33,7 @@ pub enum AppError {
     Internal(&'static str),
 }
 
-pub trait IntoResponse {
-    fn into_response(self) -> HttpResponse;
-}
-
-impl IntoResponse for AppError {
+impl AppError {
     fn into_response(self) -> HttpResponse {
         match self {
             Self::BadRequest(_) => HttpResponse::bad_request(),
@@ -186,11 +182,20 @@ fn handle_connection(
     loop {
         let request = match HttpRequest::parse(&mut reader) {
             Ok(req) => req,
-            Err(_) => {
-                return Err(Box::new(std::io::Error::new(
-                    ErrorKind::Other,
-                    "just wrong error here for now",
-                )));
+            Err(err) => {
+                let Some(mut response) = err.into_response() else {
+                    break;
+                };
+
+                response
+                    .headers
+                    .insert(HeaderName::Connection, "close".to_string());
+                response
+                    .headers
+                    .insert(HeaderName::ContentLength, response.body.len().to_string());
+
+                (&stream).write_all(&response.as_bytes())?;
+                break;
             }
         };
 
@@ -200,7 +205,7 @@ fn handle_connection(
             Match::MethodNotAllowed(allowed) => Err(AppError::MethodNotAllowed { allow: allowed }),
         };
 
-        let mut response = handler_result.unwrap_or_else(IntoResponse::into_response);
+        let mut response = handler_result.unwrap_or_else(AppError::into_response);
 
         Middlewares::run(&request, &mut response);
 

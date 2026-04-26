@@ -1,3 +1,4 @@
+use crate::response::HttpResponse;
 use std::collections::HashMap;
 use std::io::{BufRead, Read};
 use std::str::SplitWhitespace;
@@ -75,6 +76,23 @@ pub enum RequestParseError {
 impl From<std::io::Error> for RequestParseError {
     fn from(value: std::io::Error) -> Self {
         Self::Io(value)
+    }
+}
+
+impl RequestParseError {
+    pub fn into_response(self) -> Option<HttpResponse> {
+        match self {
+            RequestParseError::ConnectionClosed => None,
+            RequestParseError::InvalidRequestLine | RequestParseError::UnsupportedMethod => {
+                Some(HttpResponse::bad_request())
+            }
+            RequestParseError::HeadersTooLarge => Some(HttpResponse::request_headers_too_large()),
+            RequestParseError::BodyTooLarge => Some(HttpResponse::payload_too_large()),
+            RequestParseError::UnsupportedVersion => {
+                Some(HttpResponse::http_version_not_supported())
+            }
+            RequestParseError::Io(_) => None,
+        }
     }
 }
 

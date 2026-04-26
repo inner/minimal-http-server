@@ -78,6 +78,30 @@ impl HttpResponse {
         }
     }
 
+    pub fn payload_too_large() -> Self {
+        Self {
+            status: StatusCode::PayloadTooLarge,
+            body: Vec::new(),
+            headers: HashMap::new(),
+        }
+    }
+
+    pub fn request_headers_too_large() -> Self {
+        Self {
+            status: StatusCode::RequestHeadersTooLarge,
+            body: Vec::new(),
+            headers: HashMap::new(),
+        }
+    }
+
+    pub fn http_version_not_supported() -> Self {
+        Self {
+            status: StatusCode::HttpVersionNotSupported,
+            body: Vec::new(),
+            headers: HashMap::new(),
+        }
+    }
+
     pub fn forbidden() -> Self {
         Self {
             status: StatusCode::Forbidden,
