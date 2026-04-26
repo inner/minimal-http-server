@@ -125,13 +125,13 @@ impl HttpRequest {
 
         let mut parts = http_line.split_whitespace();
 
-        if parts.by_ref().count() != 3 {
-            return Err(RequestParseError::MalformedRequestLine);
-        }
-
         let method = parse_method(&mut parts)?;
         let path = parse_path(&mut parts)?;
         let version = parse_version(&mut parts)?;
+
+        if parts.next().is_some() {
+            return Err(RequestParseError::MalformedRequestLine);
+        }
 
         let mut headers: HashMap<String, String> = HashMap::new();
         let mut total_header_size = 0;
