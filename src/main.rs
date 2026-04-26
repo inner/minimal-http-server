@@ -66,6 +66,7 @@ fn parse_error_response(err: RequestParseError) -> Option<HttpResponse> {
         RequestParseError::HeadersTooLarge => Some(HttpResponse::request_headers_too_large()),
         RequestParseError::BodyTooLarge => Some(HttpResponse::payload_too_large()),
         RequestParseError::UnsupportedVersion => Some(HttpResponse::http_version_not_supported()),
+        RequestParseError::MalformedRequestLine => Some(HttpResponse::bad_request()),
     }
 }
 

@@ -69,6 +69,7 @@ pub enum RequestParseError {
     BodyTooLarge,
     UnsupportedMethod,
     UnsupportedVersion,
+    MalformedRequestLine,
     Io(std::io::Error),
 }
 
@@ -123,6 +124,10 @@ impl HttpRequest {
         }
 
         let mut parts = http_line.split_whitespace();
+
+        if parts.by_ref().count() != 3 {
+            return Err(RequestParseError::MalformedRequestLine);
+        }
 
         let method = parse_method(&mut parts)?;
         let path = parse_path(&mut parts)?;
