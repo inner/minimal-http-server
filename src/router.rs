@@ -1,10 +1,10 @@
 use std::collections::HashMap;
 
-use crate::Args;
 use crate::request::{HttpRequest, Method};
 use crate::response::HttpResponse;
+use crate::{AppResult, Args};
 
-pub type Handler = fn(&HttpRequest, &Args, &matchit::Params) -> HttpResponse;
+pub type Handler = fn(&HttpRequest, &Args, &matchit::Params) -> AppResult<HttpResponse>;
 
 pub enum Match<'r, 'p> {
     Found(&'r Handler, matchit::Params<'r, 'p>),

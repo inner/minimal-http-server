@@ -61,6 +61,7 @@ const MAX_HTTP_LINE_SIZE: usize = 8 * 1024;
 const MAX_HEADER_SIZE: usize = 8 * 1024;
 const MAX_BODY_SIZE: usize = 10 * 1024 * 1024;
 
+#[allow(dead_code)]
 pub enum RequestParseError {
     ConnectionClosed,
     InvalidRequestLine,

@@ -15,6 +15,7 @@ use self::response::HttpResponse;
 use self::router::{Match, Router};
 use self::threadpool::ThreadPool;
 
+use crate::files::FileError;
 use clap::Parser;
 use std::error::Error;
 use std::io::{BufReader, ErrorKind, Write};
@@ -48,57 +49,85 @@ impl IntoResponse for AppError {
     }
 }
 
-fn handle_root(_: &HttpRequest, _: &Args, _: &matchit::Params) -> HttpResponse {
-    HttpResponse::ok()
+impl From<FileError> for AppError {
+    fn from(err: FileError) -> Self {
+        match err {
+            FileError::InvalidPath => AppError::Forbidden("invalid path"),
+            FileError::NotFound => AppError::NotFound,
+            FileError::PermissionDenied => AppError::Forbidden("permission denied"),
+            FileError::Io(_) => AppError::Internal("file I/O failed"),
+        }
+    }
 }
 
-fn handle_echo(_req: &HttpRequest, _: &Args, params: &matchit::Params) -> HttpResponse {
-    let echo = params.get("echo").unwrap();
+fn handle_root(_: &HttpRequest, _: &Args, _: &matchit::Params) -> AppResult<HttpResponse> {
+    Ok(HttpResponse::ok())
+}
+
+fn handle_echo(_req: &HttpRequest, _: &Args, params: &matchit::Params) -> AppResult<HttpResponse> {
+    let echo = params
+        .get("echo")
+        .ok_or(AppError::BadRequest("Missing param: echo"))?;
 
     let res = HttpResponse::ok()
         .with_content_type(HeaderValue::TextPlain)
         .with_body(echo.as_bytes().into());
 
-    res
+    Ok(res)
 }
 
-fn handle_user_agent_header_read(req: &HttpRequest, _: &Args, _: &matchit::Params) -> HttpResponse {
-    let Some(user_agent) = req.headers.get("user-agent") else {
-        return HttpResponse::not_found();
-    };
+fn handle_user_agent_header_read(
+    req: &HttpRequest,
+    _: &Args,
+    _: &matchit::Params,
+) -> AppResult<HttpResponse> {
+    let user_agent = req
+        .headers
+        .get("user-agent")
+        .ok_or(AppError::BadRequest("Missing user-agent"))?;
 
-    HttpResponse::ok()
+    Ok(HttpResponse::ok()
         .with_content_type(HeaderValue::TextPlain)
-        .with_body(user_agent.as_bytes().into())
+        .with_body(user_agent.as_bytes().into()))
 }
 
-fn handle_read_body(req: &HttpRequest, args: &Args, params: &matchit::Params) -> HttpResponse {
-    let Some(d) = args.directory.as_deref() else {
-        return HttpResponse::not_found();
-    };
+fn handle_read_body(
+    req: &HttpRequest,
+    args: &Args,
+    params: &matchit::Params,
+) -> AppResult<HttpResponse> {
+    let dir = args
+        .directory
+        .as_deref()
+        .ok_or(AppError::BadRequest("Missing directory"))?;
 
-    let file_name = params.get("file").unwrap();
+    let file_name = params
+        .get("file")
+        .ok_or(AppError::BadRequest("Missing file"))?;
 
-    match FileManager::create(Path::new(d), file_name, &req.body) {
-        Ok(_) => HttpResponse::created(),
-        Err(_) => HttpResponse::not_found(),
-    }
+    FileManager::create(Path::new(dir), file_name, &req.body)?;
+    Ok(HttpResponse::created())
 }
 
-fn handle_return_file(_: &HttpRequest, args: &Args, params: &matchit::Params) -> HttpResponse {
-    let file_name = params.get("file").unwrap();
+fn handle_return_file(
+    _: &HttpRequest,
+    args: &Args,
+    params: &matchit::Params,
+) -> AppResult<HttpResponse> {
+    let file_name = params
+        .get("file")
+        .ok_or(AppError::BadRequest("Missing file"))?;
 
-    let Some(d) = args.directory.as_deref() else {
-        return HttpResponse::not_found();
-    };
+    let dir = args
+        .directory
+        .as_deref()
+        .ok_or(AppError::BadRequest("Missing directory"))?;
 
-    let Ok(contents) = FileManager::read(Path::new(d), file_name) else {
-        return HttpResponse::not_found();
-    };
+    let contents = FileManager::read(Path::new(dir), file_name)?;
 
-    HttpResponse::ok()
+    Ok(HttpResponse::ok()
         .with_content_type(HeaderValue::OctetStream)
-        .with_body(contents)
+        .with_body(contents))
 }
 
 #[derive(Parser)]
@@ -157,16 +186,21 @@ fn handle_connection(
     loop {
         let request = match HttpRequest::parse(&mut reader) {
             Ok(req) => req,
-            Err(_) => return Err(Box::new(std::io::Error::new(
-                ErrorKind::Other, "just wrong error here for now"
-            ))),
+            Err(_) => {
+                return Err(Box::new(std::io::Error::new(
+                    ErrorKind::Other,
+                    "just wrong error here for now",
+                )));
+            }
         };
 
-        let mut response = match router.find(&request.path, &request.method) {
-            Match::Found(handler, params) => handler(&request, &args, &params),
-            Match::NotFound => HttpResponse::not_found(),
-            Match::MethodNotAllowed(allowed) => HttpResponse::not_allowed(&allowed),
+        let handler_result = match router.find(&request.path, &request.method) {
+            Match::Found(handler, params) => handler(&request, args, &params),
+            Match::NotFound => Err(AppError::NotFound),
+            Match::MethodNotAllowed(allowed) => Err(AppError::MethodNotAllowed { allow: allowed }),
         };
+
+        let mut response = handler_result.unwrap_or_else(IntoResponse::into_response);
 
         Middlewares::run(&request, &mut response);
 
