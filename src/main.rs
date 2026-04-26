@@ -1,4 +1,3 @@
-mod app;
 mod files;
 mod http;
 mod middlewares;
@@ -133,12 +132,6 @@ struct Args {
 }
 
 fn main() -> Result<(), Box<dyn Error>> {
-    // working on changes
-    // App::new()
-    //     .with_route(Method::Get, "/", handle_root)
-    //     .with_route(Method::Get, "/echo", handle_echo)
-    //     .run();
-
     let args = Arc::new(Args::parse());
     let listener = TcpListener::bind("0.0.0.0:4221")?;
 
