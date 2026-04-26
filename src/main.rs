@@ -9,7 +9,7 @@ mod threadpool;
 use self::files::FileManager;
 use self::http::{HeaderName, HeaderValue};
 use self::middlewares::Middlewares;
-use self::request::{HttpRequest, Method};
+use self::request::{HttpRequest, Method, RequestParseError};
 use self::response::HttpResponse;
 use self::router::{Match, Router};
 use self::threadpool::ThreadPool;
@@ -21,7 +21,6 @@ use std::io::{BufReader, Write};
 use std::net::{TcpListener, TcpStream};
 use std::path::Path;
 use std::sync::Arc;
-use crate::request::ParseErrorAction;
 
 pub type AppResult<T> = Result<T, AppError>;
 
@@ -53,6 +52,18 @@ impl From<FileError> for AppError {
             FileError::PermissionDenied => AppError::Forbidden("permission denied"),
             FileError::Io(_) => AppError::Internal("file I/O failed"),
         }
+    }
+}
+
+fn parse_error_response(err: RequestParseError) -> Option<HttpResponse> {
+    match err {
+        RequestParseError::ConnectionClosed | RequestParseError::Io(_) => None,
+        RequestParseError::InvalidRequestLine | RequestParseError::UnsupportedMethod => {
+            Some(HttpResponse::bad_request())
+        }
+        RequestParseError::HeadersTooLarge => Some(HttpResponse::request_headers_too_large()),
+        RequestParseError::BodyTooLarge => Some(HttpResponse::payload_too_large()),
+        RequestParseError::UnsupportedVersion => Some(HttpResponse::http_version_not_supported()),
     }
 }
 
@@ -176,19 +187,20 @@ fn handle_connection(
     loop {
         let request = match HttpRequest::parse(&mut reader) {
             Ok(req) => req,
-            Err(err) => match err.into_action() {
-                ParseErrorAction::Close => break,
-                ParseErrorAction::Respond(mut response) => {
-                    response
-                        .headers
-                        .insert(HeaderName::Connection, "close".to_string());
-                    response
-                        .headers
-                        .insert(HeaderName::ContentLength, response.body.len().to_string());
-
-                    (&stream).write_all(&response.as_bytes())?;
+            Err(err) => {
+                let Some(mut response) = parse_error_response(err) else {
                     break;
-                }
+                };
+
+                response
+                    .headers
+                    .insert(HeaderName::Connection, "close".to_string());
+                response
+                    .headers
+                    .insert(HeaderName::ContentLength, response.body.len().to_string());
+
+                (&stream).write_all(&response.as_bytes())?;
+                break;
             }
         };
 
