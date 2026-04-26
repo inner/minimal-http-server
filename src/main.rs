@@ -8,7 +8,9 @@ mod threadpool;
 
 use self::files::FileManager;
 use self::http::{HeaderName, HeaderValue};
-use self::middlewares::Middlewares;
+use self::middlewares::{
+    MiddlewareChain, apply_content_length, apply_encoding, apply_keep_alive_headers,
+};
 use self::request::{HttpRequest, Method, RequestParseError};
 use self::response::HttpResponse;
 use self::router::{Match, Router};
@@ -156,14 +158,22 @@ fn main() -> Result<(), Box<dyn Error>> {
             .route(Method::Post, "/files/{file}", handle_read_body),
     );
 
+    let middlewares = Arc::new(
+        MiddlewareChain::new()
+            .add(apply_encoding)
+            .add(apply_content_length)
+            .add(apply_keep_alive_headers),
+    );
+
     let pool = ThreadPool::build(10)?;
     for stream in listener.incoming() {
         match stream {
             Ok(s) => {
                 let args = Arc::clone(&args);
                 let router = Arc::clone(&router);
+                let middlewares = Arc::clone(&middlewares);
                 pool.execute(move || {
-                    if let Err(e) = handle_connection(&args, &router, s) {
+                    if let Err(e) = handle_connection(&args, &router, &middlewares, s) {
                         eprintln!("connection error: {e}");
                     }
                 })?;
@@ -180,6 +190,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn handle_connection(
     args: &Args,
     router: &Router,
+    middlewares: &MiddlewareChain,
     stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = BufReader::new(&stream);
@@ -212,7 +223,7 @@ fn handle_connection(
 
         let mut response = handler_result.unwrap_or_else(AppError::into_response);
 
-        Middlewares::run(&request, &mut response);
+        middlewares.run(&request, &mut response);
 
         (&stream).write_all(&response.as_bytes())?;
 
