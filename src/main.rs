@@ -9,7 +9,7 @@ mod threadpool;
 use self::files::FileManager;
 use self::http::{HeaderName, HeaderValue};
 use self::middlewares::{
-    MiddlewareChain, apply_content_length, apply_encoding, apply_keep_alive_headers,
+    MiddlewarePipeline, apply_content_length, apply_encoding, apply_keep_alive_headers,
 };
 use self::request::{HttpRequest, Method, RequestParseError};
 use self::response::HttpResponse;
@@ -160,7 +160,7 @@ fn main() -> Result<(), Box<dyn Error>> {
     );
 
     let middlewares = Arc::new(
-        MiddlewareChain::new()
+        MiddlewarePipeline::new()
             .add(apply_encoding)
             .add(apply_content_length)
             .add(apply_keep_alive_headers),
@@ -191,7 +191,7 @@ fn main() -> Result<(), Box<dyn Error>> {
 fn handle_connection(
     args: &Args,
     router: &Router,
-    middlewares: &MiddlewareChain,
+    middlewares: &MiddlewarePipeline,
     stream: TcpStream,
 ) -> Result<(), Box<dyn Error>> {
     let mut reader = BufReader::new(&stream);

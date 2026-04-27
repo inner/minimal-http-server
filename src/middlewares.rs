@@ -8,11 +8,11 @@ use std::io::Write;
 
 pub type Middleware = fn(&HttpRequest, &mut HttpResponse);
 
-pub struct MiddlewareChain {
+pub struct MiddlewarePipeline {
     middlewares: Vec<Middleware>,
 }
 
-impl MiddlewareChain {
+impl MiddlewarePipeline {
     pub fn new() -> Self {
         Self {
             middlewares: Vec::new(),
